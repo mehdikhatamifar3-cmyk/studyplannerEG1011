@@ -1,15 +1,1481 @@
 [
-{"id":"S1_FORCE","title":"Force Components","area":"Statics","session":1,"description":"Resolve forces into suitable Cartesian components with consistent signs and units.","outcomes":["Resolve 2D forces","Use trigonometry","Check signs and units"],"required":[],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S1_FBD","title":"Free-Body Diagrams","area":"Statics","session":1,"description":"Isolate a body and show every relevant external force and reaction before writing equations.","outcomes":["Isolate the body","Show reactions","Choose axes"],"required":["S1_FORCE"],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S1_EQ","title":"Particle Equilibrium","area":"Statics","session":1,"description":"Apply equilibrium equations after constructing a correct free-body diagram.","outcomes":["Apply ΣFx=0","Apply ΣFy=0","Interpret equilibrium"],"required":["S1_FORCE","S1_FBD"],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S2_MOM","title":"Moments and Couples","area":"Statics","session":2,"description":"Calculate moments using force times perpendicular distance and a consistent sign convention.","outcomes":["Choose a moment centre","Use perpendicular distance","Apply signs"],"required":["S1_FORCE","S1_FBD"],"helpful":["S1_EQ"],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S2_REACT","title":"Support Reactions","area":"Statics","session":2,"description":"Model common supports and solve rigid-body equilibrium equations.","outcomes":["Model supports","Apply ΣM=0","Solve reactions"],"required":["S1_FBD","S1_EQ","S2_MOM"],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S3_INTERNAL","title":"Internal Forces, Shear and Bending","area":"Statics","session":3,"description":"Use section cuts and equilibrium to determine normal force, shear force, and bending moment.","outcomes":["Make a section cut","Find N, V and M","Build SFD/BMD"],"required":["S1_FBD","S2_MOM","S2_REACT"],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S4_CENT","title":"Centroids and Composite Areas","area":"Statics","session":4,"description":"Locate centroids using first moments of area and a clear component table.","outcomes":["Choose axes","Use first moments","Handle cut-outs"],"required":[],"helpful":["S1_FORCE"],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"S4_MOI","title":"Second Moment of Area","area":"Statics","session":4,"description":"Calculate area second moments using standard formulas and the parallel-axis theorem.","outcomes":["Use standard formulas","Apply parallel-axis theorem","Handle composite areas"],"required":["S4_CENT"],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"D1_KIN","title":"Particle Kinematics","area":"Dynamics","session":1,"description":"Choose relationships between position, velocity, acceleration, and time.","outcomes":["Distinguish s, v and a","Interpret graphs","Choose relationships"],"required":[],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"D2_FA","title":"Force and Acceleration","area":"Dynamics","session":2,"description":"Use a free-body diagram and Newton's second law with coordinates suited to the motion.","outcomes":["Draw the FBD","Choose coordinates","Apply ΣF=ma"],"required":["D1_KIN"],"helpful":["S1_FORCE","S1_FBD"],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"D3_WE","title":"Work and Energy","area":"Dynamics","session":3,"description":"Relate force and displacement to changes in speed, including friction and springs.","outcomes":["Identify work terms","Use work signs","Apply work-energy"],"required":["D1_KIN","D2_FA"],"helpful":["S1_FBD","S1_FORCE"],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"D4_RBV","title":"Rigid-Body Velocity Analysis","area":"Dynamics","session":4,"description":"Use relative velocity and constraints for rotating links and sliders.","outcomes":["Use relative velocity","Apply constraints","Find angular velocity"],"required":["D1_KIN"],"helpful":[],"activities":["QG","LN","SBS","APP","T","H","EXIT"]},
-{"id":"D5_RBA","title":"Rigid-Body Acceleration Analysis","area":"Dynamics","session":5,"description":"Complete velocity analysis first, then apply tangential and normal acceleration terms.","outcomes":["Complete velocity analysis","Use tangential acceleration","Use normal acceleration"],"required":["D4_RBV"],"helpful":["D1_KIN"],"activities":["QG","LN","SBS","APP","T","H","EXIT"]}
+  {
+    "id": "F_ALG",
+    "title": "Algebra and simultaneous equations",
+    "short_title": "Algebra",
+    "area": "Foundations",
+    "session": 0,
+    "description": "Rearrange engineering equations and solve for several unknowns without losing signs.",
+    "required": [],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        1,
+        1
+      ]
+    },
+    "outcomes": [
+      "Rearrange a formula",
+      "Solve two simultaneous equations",
+      "Substitute to check"
+    ],
+    "practice_prompt": "Solve A + B = 10 and 2A - B = 2; substitute both answers back into the equations.",
+    "common_mistake": "Moving a term across an equals sign without changing its sign.",
+    "activities": [
+      "LN",
+      "EXIT"
+    ],
+    "check": {
+      "question": "If A + B = 10 and 2A - B = 2, what is A?",
+      "options": [
+        "4",
+        "6",
+        "8"
+      ],
+      "answer": 0,
+      "explanation": "Add the equations: 3A = 12, so A = 4 and B = 6.",
+      "repair_topic": "F_ALG"
+    }
+  },
+  {
+    "id": "F_TRIG",
+    "title": "Geometry, trigonometry and radians",
+    "short_title": "Geometry & trig",
+    "area": "Foundations",
+    "session": 0,
+    "description": "Read the reference angle, identify perpendicular distances and use radians in rotational relationships.",
+    "required": [],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        1,
+        4
+      ]
+    },
+    "outcomes": [
+      "Use sine and cosine with a drawn triangle",
+      "Identify perpendicular distance",
+      "Convert degrees to radians"
+    ],
+    "practice_prompt": "Draw a 3-4-5 triangle, label opposite and adjacent sides, then convert 90 degrees to radians.",
+    "common_mistake": "Using a memorised sine/cosine rule without checking the reference angle.",
+    "activities": [
+      "LN",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A force F makes an angle theta with the vertical. Which is its horizontal component magnitude?",
+      "options": [
+        "F cos(theta)",
+        "F sin(theta)",
+        "F tan(theta)"
+      ],
+      "answer": 1,
+      "explanation": "The horizontal component is opposite the angle measured from the vertical: F sin(theta).",
+      "repair_topic": "F_TRIG"
+    }
+  },
+  {
+    "id": "F_UNITS",
+    "title": "Units, dimensions and sign conventions",
+    "short_title": "Units & signs",
+    "area": "Foundations",
+    "session": 0,
+    "description": "Keep SI units, coordinate directions and physical quantities consistent before calculating.",
+    "required": [],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        4,
+        5
+      ]
+    },
+    "outcomes": [
+      "Convert units before substitution",
+      "State positive directions",
+      "Check dimensions"
+    ],
+    "practice_prompt": "Convert 250 mm to metres and 2 kN to newtons. State positive x, y and rotation directions.",
+    "common_mistake": "Mixing millimetres with metres, or treating a negative answer as automatically wrong.",
+    "activities": [
+      "LN",
+      "EXIT"
+    ],
+    "check": {
+      "question": "What are the SI units of a force moment?",
+      "options": [
+        "N/m",
+        "N m",
+        "kg/m"
+      ],
+      "answer": 1,
+      "explanation": "Moment is force times perpendicular distance, so its units are N m.",
+      "repair_topic": "F_UNITS"
+    }
+  },
+  {
+    "id": "F_CALC",
+    "title": "Differentiation and integration",
+    "short_title": "Calculus",
+    "area": "Foundations",
+    "session": 0,
+    "description": "Connect rates of change and accumulated quantities using derivatives, definite integrals and initial conditions.",
+    "required": [
+      "F_ALG"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "D1.pdf",
+      "pages": [
+        3,
+        12
+      ]
+    },
+    "outcomes": [
+      "Differentiate a power of time",
+      "Integrate with limits",
+      "Apply initial conditions"
+    ],
+    "practice_prompt": "For v(t) = 3t^2 and s(0) = 2, find a(t) and s(t). Check by differentiating.",
+    "common_mistake": "Forgetting the initial value or using a constant-acceleration formula for variable acceleration.",
+    "activities": [
+      "LN",
+      "EXIT"
+    ],
+    "check": {
+      "question": "If v(t) = 3t^2, what is a(t)?",
+      "options": [
+        "6t",
+        "t^3",
+        "3t"
+      ],
+      "answer": 0,
+      "explanation": "Acceleration is dv/dt, so a(t) = 6t.",
+      "repair_topic": "F_CALC"
+    }
+  },
+  {
+    "id": "F_GRAPH",
+    "title": "Graphs, slopes and signed areas",
+    "short_title": "Graphs & areas",
+    "area": "Foundations",
+    "session": 0,
+    "description": "Interpret gradients, signed area and piecewise functions before using motion and load diagrams.",
+    "required": [
+      "F_ALG"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "D1.pdf",
+      "pages": [
+        3,
+        4
+      ]
+    },
+    "outcomes": [
+      "Read a graph gradient",
+      "Distinguish signed area and total area",
+      "Handle intervals"
+    ],
+    "practice_prompt": "Sketch a velocity graph that crosses zero. Shade the signed displacement and the total distance separately.",
+    "common_mistake": "Counting a negative velocity area as positive displacement, or confusing a graph value with its gradient.",
+    "activities": [
+      "LN",
+      "EXIT"
+    ],
+    "check": {
+      "question": "What does the signed area under a velocity-time graph represent?",
+      "options": [
+        "Acceleration",
+        "Displacement",
+        "Total distance in every case"
+      ],
+      "answer": 1,
+      "explanation": "The signed integral of velocity gives displacement. Total distance uses the magnitude of velocity.",
+      "repair_topic": "F_GRAPH"
+    }
+  },
+  {
+    "id": "S1_FORCE",
+    "title": "Force components and resultants",
+    "short_title": "Force components",
+    "area": "Statics",
+    "session": 1,
+    "description": "Resolve two-dimensional forces into Cartesian components and reconstruct a resultant with the correct direction.",
+    "required": [
+      "F_ALG",
+      "F_TRIG",
+      "F_UNITS"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        2,
+        15
+      ]
+    },
+    "outcomes": [
+      "Resolve 2D forces",
+      "Find a resultant",
+      "Check its quadrant"
+    ],
+    "practice_prompt": "Hide a lecture solution. Resolve each force, add components, and reconstruct magnitude and direction.",
+    "common_mistake": "Using the horizontal-angle component formulas when the diagram measures an angle from the vertical.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A 100 N force acts 30 degrees above the positive x-axis. What is its vertical component?",
+      "options": [
+        "86.6 N",
+        "50 N",
+        "100 N"
+      ],
+      "answer": 1,
+      "explanation": "Fy = 100 sin(30 degrees) = 50 N because the angle is measured from x.",
+      "repair_topic": "F_TRIG"
+    }
+  },
+  {
+    "id": "S1_FBD",
+    "title": "Free-body diagrams",
+    "short_title": "Free-body diagrams",
+    "area": "Statics",
+    "session": 1,
+    "description": "Isolate one body and replace each physical support or contact by the external forces it can exert.",
+    "required": [
+      "S1_FORCE"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        12,
+        22
+      ]
+    },
+    "outcomes": [
+      "Isolate a body",
+      "Replace supports correctly",
+      "Label forces and axes"
+    ],
+    "practice_prompt": "Draw the isolated body before writing equations. Explain each reaction direction and omit internal force pairs for the whole body.",
+    "common_mistake": "Keeping a support symbol on the isolated body instead of replacing it with reaction forces.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "For a 2D pin support, which reaction model is normally appropriate?",
+      "options": [
+        "One force and a moment",
+        "Two force components, no reaction couple",
+        "One vertical force only"
+      ],
+      "answer": 1,
+      "explanation": "An ideal 2D pin restrains translation in x and y but allows rotation.",
+      "repair_topic": "S1_FORCE"
+    }
+  },
+  {
+    "id": "S1_EQ",
+    "title": "Particle equilibrium",
+    "short_title": "Particle equilibrium",
+    "area": "Statics",
+    "session": 1,
+    "description": "Use a correct particle free-body diagram to solve force balance in two dimensions.",
+    "required": [
+      "S1_FBD",
+      "F_ALG"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        11,
+        15
+      ]
+    },
+    "outcomes": [
+      "Apply sum Fx = 0",
+      "Apply sum Fy = 0",
+      "Interpret force balance"
+    ],
+    "practice_prompt": "Solve a cable-junction problem, then substitute the tensions into both component equations.",
+    "common_mistake": "Setting every individual force to zero instead of setting the vector sum to zero.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "For a particle in static equilibrium, which condition must hold?",
+      "options": [
+        "Every force is zero",
+        "The vector sum of forces is zero",
+        "All forces have equal magnitude"
+      ],
+      "answer": 1,
+      "explanation": "Forces can be nonzero while cancelling in the vector sum.",
+      "repair_topic": "S1_FBD"
+    }
+  },
+  {
+    "id": "S2_MOM",
+    "title": "2D moments and couples",
+    "short_title": "Moments & couples",
+    "area": "Statics",
+    "session": 1,
+    "description": "Calculate the turning effect of a force, choose a moment centre and distinguish forces from couples.",
+    "required": [
+      "S1_FORCE",
+      "F_TRIG"
+    ],
+    "helpful": [
+      "S1_FBD"
+    ],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        16,
+        22
+      ]
+    },
+    "outcomes": [
+      "Use perpendicular distance",
+      "Choose a useful moment centre",
+      "Apply a consistent rotation sign"
+    ],
+    "practice_prompt": "Calculate a moment using both F times perpendicular distance and xFy - yFx; compare the signs.",
+    "common_mistake": "Using the distance to the application point instead of the perpendicular distance to the line of action.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A force line of action passes through the chosen moment centre. What is its moment about that centre?",
+      "options": [
+        "F times the distance to the application point",
+        "Zero",
+        "It depends on force magnitude only"
+      ],
+      "answer": 1,
+      "explanation": "The perpendicular moment arm is zero.",
+      "repair_topic": "F_TRIG"
+    }
+  },
+  {
+    "id": "S2_REACT",
+    "title": "Support reactions and rigid-body equilibrium",
+    "short_title": "Support reactions",
+    "area": "Statics",
+    "session": 1,
+    "description": "Combine force and moment equilibrium to find support reactions on a planar rigid body.",
+    "required": [
+      "S1_EQ",
+      "S2_MOM",
+      "S1_FBD"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        19,
+        29
+      ]
+    },
+    "outcomes": [
+      "Model pin, roller and fixed supports",
+      "Use moment equilibrium",
+      "Check force balance"
+    ],
+    "practice_prompt": "Find reactions for a loaded beam. Choose a moment centre that removes as many unknowns as possible.",
+    "common_mistake": "Solving reaction equations before checking the number and direction of unknown support reactions.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "Why take moments about a pin support when solving a beam?",
+      "options": [
+        "The moment equation is unnecessary",
+        "Its reaction forces then have zero moment arm",
+        "It makes the applied loads vanish"
+      ],
+      "answer": 1,
+      "explanation": "Forces acting at the selected pin have zero moment about that point.",
+      "repair_topic": "S2_MOM"
+    }
+  },
+  {
+    "id": "S1_TRUSS",
+    "title": "Trusses: joints, sections and zero-force members",
+    "short_title": "Truss analysis",
+    "area": "Statics",
+    "session": 1,
+    "description": "Use two-force-member assumptions, joint equilibrium and strategic section cuts to find axial member forces.",
+    "required": [
+      "S2_REACT",
+      "S1_EQ"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S1.pdf",
+      "pages": [
+        30,
+        47
+      ]
+    },
+    "outcomes": [
+      "Choose joints or sections",
+      "Identify zero-force members",
+      "Interpret tension and compression"
+    ],
+    "practice_prompt": "Find reactions first. Solve one joint with at most two unknowns, then compare with a section through the target member.",
+    "common_mistake": "Applying the two-force-member model when loads act between the joints.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "At an unloaded joint with only two non-collinear members, what are the member forces?",
+      "options": [
+        "Both zero",
+        "Both in tension",
+        "Equal and nonzero"
+      ],
+      "answer": 0,
+      "explanation": "With no external joint load or support reaction, two non-collinear forces cannot balance unless both are zero.",
+      "repair_topic": "S1_EQ"
+    }
+  },
+  {
+    "id": "S2_VECTOR",
+    "title": "3D vectors and force along a line",
+    "short_title": "3D force vectors",
+    "area": "Statics",
+    "session": 2,
+    "description": "Build position and unit vectors from coordinates; distinguish scalar and vector products.",
+    "required": [
+      "S1_FORCE",
+      "F_ALG"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S2.pdf",
+      "pages": [
+        1,
+        7
+      ]
+    },
+    "outcomes": [
+      "Build a unit vector",
+      "Write force along a line",
+      "Distinguish dot and cross products"
+    ],
+    "practice_prompt": "Write r_AB from point coordinates, normalise it, and multiply by the force magnitude. Check the unit-vector magnitude.",
+    "common_mistake": "Using coordinates directly as a force direction without first normalising the direction vector.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "For a force of magnitude F from A towards B, which expression is correct?",
+      "options": [
+        "F times r_AB",
+        "F times r_AB / |r_AB|",
+        "r_AB / F"
+      ],
+      "answer": 1,
+      "explanation": "The unit vector supplies direction; multiplying it by F supplies the magnitude.",
+      "repair_topic": "S1_FORCE"
+    }
+  },
+  {
+    "id": "S2_MOM3D",
+    "title": "3D moments and moment about an axis",
+    "short_title": "3D moments",
+    "area": "Statics",
+    "session": 2,
+    "description": "Use r cross F for a moment vector and project it onto a specified unit axis vector.",
+    "required": [
+      "S2_VECTOR",
+      "S2_MOM"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S2.pdf",
+      "pages": [
+        8,
+        21
+      ]
+    },
+    "outcomes": [
+      "Choose a valid position vector",
+      "Compute r cross F",
+      "Project a moment onto an axis"
+    ],
+    "practice_prompt": "Calculate the moment vector, then dot it with the unit vector of the requested axis.",
+    "common_mistake": "Reversing the cross-product order or projecting onto an axis vector that is not a unit vector.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "Which expression gives the scalar moment about an axis with unit vector u?",
+      "options": [
+        "u dot (r cross F)",
+        "u cross (r dot F)",
+        "|r| |F| in every case"
+      ],
+      "answer": 0,
+      "explanation": "First obtain the moment vector r cross F, then take its scalar projection onto the unit axis.",
+      "repair_topic": "S2_VECTOR"
+    }
+  },
+  {
+    "id": "S2_DIST",
+    "title": "Distributed loads and equivalent resultants",
+    "short_title": "Distributed loads",
+    "area": "Statics",
+    "session": 2,
+    "description": "Replace a load distribution with an equivalent resultant at the centroid of its load diagram.",
+    "required": [
+      "S2_MOM",
+      "F_GRAPH"
+    ],
+    "helpful": [
+      "F_CALC",
+      "S4_CENT"
+    ],
+    "source": {
+      "file": "S2.pdf",
+      "pages": [
+        22,
+        37
+      ]
+    },
+    "outcomes": [
+      "Find area under a load diagram",
+      "Locate its centroid",
+      "Check load-intensity units"
+    ],
+    "practice_prompt": "For a triangular load, find its resultant and distance from the larger-intensity end; then solve a beam reaction problem.",
+    "common_mistake": "Placing a triangular-load resultant at the midpoint or confusing N/m with N.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A triangular load grows from zero to w over length L. Its resultant acts where?",
+      "options": [
+        "L/2 from the zero end",
+        "2L/3 from the zero end",
+        "L/3 from the zero end"
+      ],
+      "answer": 1,
+      "explanation": "The centroid of the triangular load diagram is 2L/3 from the zero-intensity end.",
+      "repair_topic": "F_GRAPH"
+    }
+  },
+  {
+    "id": "S2_EQ3D",
+    "title": "3D particle and rigid-body equilibrium",
+    "short_title": "3D equilibrium",
+    "area": "Statics",
+    "session": 2,
+    "description": "Combine vector force and moment balance with appropriate three-dimensional support models.",
+    "required": [
+      "S2_VECTOR",
+      "S2_MOM3D",
+      "S2_REACT"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S2.pdf",
+      "pages": [
+        38,
+        55
+      ]
+    },
+    "outcomes": [
+      "Build vector free-body diagrams",
+      "Apply force and moment balances",
+      "Check support constraints"
+    ],
+    "practice_prompt": "Write all cable forces with unit vectors. Form the force and moment equations before solving unknown magnitudes.",
+    "common_mistake": "Assuming a 3D support has the same restraint components as a 2D support.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "For a general rigid body in 3D static equilibrium, what must be zero?",
+      "options": [
+        "Only the sum of force magnitudes",
+        "Both the resultant force vector and resultant moment vector",
+        "Only the resultant force vector"
+      ],
+      "answer": 1,
+      "explanation": "A general rigid body needs both vector force and moment balance.",
+      "repair_topic": "S2_MOM3D"
+    }
+  },
+  {
+    "id": "S3_INTERNAL",
+    "title": "Internal forces and section cuts",
+    "short_title": "Internal forces",
+    "area": "Statics",
+    "session": 3,
+    "description": "Cut a member and use equilibrium of one side to determine normal force, shear force and bending moment.",
+    "required": [
+      "S2_REACT",
+      "S2_MOM",
+      "S1_FBD"
+    ],
+    "helpful": [
+      "S2_DIST"
+    ],
+    "source": {
+      "file": "S3.pdf",
+      "pages": [
+        1,
+        9
+      ]
+    },
+    "outcomes": [
+      "Draw a section free-body diagram",
+      "Find N, V and M",
+      "Use consistent cut-face signs"
+    ],
+    "practice_prompt": "Make a cut before and after a point load. Choose the simpler side and write all three equilibrium equations.",
+    "common_mistake": "Including a force on the removed side of a cut, or forgetting one internal resultant.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "After cutting a planar beam, what internal resultants generally appear on the cut face?",
+      "options": [
+        "Normal force only",
+        "Normal force, shear force and bending moment",
+        "External support reactions only"
+      ],
+      "answer": 1,
+      "explanation": "The cut transmits axial force N, transverse shear V and bending moment M.",
+      "repair_topic": "S1_FBD"
+    }
+  },
+  {
+    "id": "S3_DIAGRAM",
+    "title": "Shear-force and bending-moment diagrams",
+    "short_title": "Shear & moment",
+    "area": "Statics",
+    "session": 3,
+    "description": "Connect distributed loading, section shear and bending moment through slopes, areas and jumps.",
+    "required": [
+      "S3_INTERNAL",
+      "S2_DIST",
+      "F_GRAPH"
+    ],
+    "helpful": [
+      "F_CALC"
+    ],
+    "source": {
+      "file": "S3.pdf",
+      "pages": [
+        10,
+        32
+      ]
+    },
+    "outcomes": [
+      "Choose piecewise intervals",
+      "Track load and couple jumps",
+      "Check slopes and signed areas"
+    ],
+    "practice_prompt": "Sketch V and M for a beam with a point load and a distributed load. Check end conditions and the area under V.",
+    "common_mistake": "Putting the effect of a concentrated couple into the shear diagram instead of the moment diagram.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "Across a concentrated transverse force, what happens to the shear-force diagram?",
+      "options": [
+        "It jumps",
+        "It is always continuous",
+        "Its value must become zero"
+      ],
+      "answer": 0,
+      "explanation": "A point force produces a jump in shear. A concentrated couple produces a jump in bending moment.",
+      "repair_topic": "S3_INTERNAL"
+    }
+  },
+  {
+    "id": "S4_CENT",
+    "title": "Centroids and composite areas",
+    "short_title": "Centroids",
+    "area": "Statics",
+    "session": 4,
+    "description": "Locate an area centroid with a common datum, symmetry and signed component areas for cut-outs.",
+    "required": [
+      "F_ALG",
+      "F_UNITS"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S4(1).pdf",
+      "pages": [
+        1,
+        16
+      ]
+    },
+    "outcomes": [
+      "Choose a common datum",
+      "Use signed component areas",
+      "Check symmetry"
+    ],
+    "practice_prompt": "Build an A, x, y table for a composite shape with a hole. Check that the answer agrees with symmetry.",
+    "common_mistake": "Subtracting a hole area but adding its first moment, or mixing component reference axes.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "How should a cut-out be included in a composite centroid calculation?",
+      "options": [
+        "As negative area and negative first moments",
+        "As zero area",
+        "As positive area with no first moment"
+      ],
+      "answer": 0,
+      "explanation": "Subtract both the removed area and its contribution to each first moment.",
+      "repair_topic": "F_ALG"
+    }
+  },
+  {
+    "id": "S4_MOI",
+    "title": "Second moments of area and parallel axes",
+    "short_title": "Area inertia",
+    "area": "Statics",
+    "session": 4,
+    "description": "Calculate second moments about a stated area axis using standard shapes and the parallel-axis theorem.",
+    "required": [
+      "S4_CENT",
+      "F_UNITS"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S4(1).pdf",
+      "pages": [
+        16,
+        26
+      ]
+    },
+    "outcomes": [
+      "Identify the required area axis",
+      "Use I = Ic + A d^2",
+      "Distinguish area and mass moments"
+    ],
+    "practice_prompt": "Find the centroid first. Calculate each component contribution about the same final axis, subtracting cut-outs.",
+    "common_mistake": "Using area moment in m^4 as though it were mass moment in kg m^2.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "Which is the correct parallel-axis relation for an area?",
+      "options": [
+        "I = Ic + A d^2",
+        "I = Ic + m d^2",
+        "I = Ic + A d"
+      ],
+      "answer": 0,
+      "explanation": "For an area, the shift term is A d^2 and the units are length to the fourth power.",
+      "repair_topic": "S4_CENT"
+    }
+  },
+  {
+    "id": "S4_INTEGRAL",
+    "title": "Section properties by integration",
+    "short_title": "Area integration",
+    "area": "Statics",
+    "session": 4,
+    "description": "Choose a differential strip and integrate its area, first moment or second moment about the required axis.",
+    "required": [
+      "S4_CENT",
+      "S4_MOI",
+      "F_CALC"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "S4(1).pdf",
+      "pages": [
+        27,
+        59
+      ]
+    },
+    "outcomes": [
+      "Choose horizontal or vertical strips",
+      "Distinguish strip centroids from point coordinates",
+      "Set integration limits"
+    ],
+    "practice_prompt": "Calculate Ix with horizontal strips, then check using vertical strips with the strip second moment included.",
+    "common_mistake": "Using a finite-depth strip centroid y_c in place of every point coordinate y in the definition of Ix.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "For a vertical strip with finite depth in y, is its contribution to Ix always just y_c^2 dA?",
+      "options": [
+        "Yes",
+        "No; the strip own centroidal second moment may also contribute",
+        "Only the total area matters"
+      ],
+      "answer": 1,
+      "explanation": "For finite-depth strips, the strip own second moment must be retained. S4 explains this distinction in detail.",
+      "repair_topic": "S4_MOI"
+    }
+  },
+  {
+    "id": "D1_KIN",
+    "title": "Particle kinematics: position, velocity and acceleration",
+    "short_title": "Particle motion",
+    "area": "Dynamics",
+    "session": 1,
+    "description": "Choose a coordinate direction and connect position, velocity, acceleration and time using graphs or constant-acceleration relations.",
+    "required": [
+      "F_ALG",
+      "F_GRAPH",
+      "F_UNITS"
+    ],
+    "helpful": [
+      "S1_FORCE"
+    ],
+    "source": {
+      "file": "D1.pdf",
+      "pages": [
+        1,
+        6
+      ]
+    },
+    "outcomes": [
+      "Distinguish speed and velocity",
+      "Interpret motion graphs",
+      "Check the constant-acceleration assumption"
+    ],
+    "practice_prompt": "Sketch s(t), v(t) and a(t) for one simple motion. State when constant-acceleration formulas are valid.",
+    "common_mistake": "Using a constant-acceleration equation when acceleration changes during the interval.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "When is v^2 = v0^2 + 2a(s-s0) valid with one constant a?",
+      "options": [
+        "For every motion",
+        "When acceleration is constant over the interval",
+        "Only when velocity is constant"
+      ],
+      "answer": 1,
+      "explanation": "That form follows from constant acceleration and cannot be applied indiscriminately to variable acceleration.",
+      "repair_topic": "F_GRAPH"
+    }
+  },
+  {
+    "id": "D1_VARIABLE",
+    "title": "Variable acceleration and piecewise motion",
+    "short_title": "Variable motion",
+    "area": "Dynamics",
+    "session": 1,
+    "description": "Select an appropriate differential relationship for a(t), a(s) or a(v), and carry conditions between intervals.",
+    "required": [
+      "D1_KIN",
+      "F_CALC"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "D1.pdf",
+      "pages": [
+        6,
+        25
+      ]
+    },
+    "outcomes": [
+      "Select a differential relationship",
+      "Apply initial and interval conditions",
+      "Distinguish distance and displacement"
+    ],
+    "practice_prompt": "For a = a(s), start from a = v dv/ds. For a piecewise history, carry the ending state into the next interval.",
+    "common_mistake": "Resetting velocity or position to zero at the start of every time interval.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "Which relationship is particularly useful when acceleration is given as a function of position?",
+      "options": [
+        "a = v dv/ds",
+        "a = v/t for all motion",
+        "s = at for all motion"
+      ],
+      "answer": 0,
+      "explanation": "The chain rule gives a = dv/dt = (dv/ds)(ds/dt) = v dv/ds.",
+      "repair_topic": "F_CALC"
+    }
+  },
+  {
+    "id": "D2_FA",
+    "title": "Particle force and acceleration",
+    "short_title": "Force & acceleration",
+    "area": "Dynamics",
+    "session": 2,
+    "description": "Connect a particle free-body diagram to acceleration using Newton second law, including friction and connected bodies.",
+    "required": [
+      "D1_KIN",
+      "S1_FBD",
+      "S1_FORCE"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "D2.pdf",
+      "pages": [
+        1,
+        7
+      ]
+    },
+    "outcomes": [
+      "Separate FBD and kinetic diagram",
+      "Choose coordinates",
+      "Apply sum F = ma"
+    ],
+    "practice_prompt": "Draw the FBD and acceleration direction separately. Derive the normal force before computing kinetic friction.",
+    "common_mistake": "Assuming N = mg on every inclined or externally pulled surface.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "What does a particle free-body diagram contain?",
+      "options": [
+        "Real external forces on the particle",
+        "An extra ma force as well as all real forces",
+        "Velocity vectors instead of forces"
+      ],
+      "answer": 0,
+      "explanation": "The FBD contains real forces. ma belongs on the acceleration side of Newton second law.",
+      "repair_topic": "S1_FBD"
+    }
+  },
+  {
+    "id": "D2_CURVE",
+    "title": "Normal-tangential and circular kinetics",
+    "short_title": "Curved-path forces",
+    "area": "Dynamics",
+    "session": 2,
+    "description": "Resolve force balance along the tangent and inward normal, with a_n = v^2/rho and a_t = dv/dt.",
+    "required": [
+      "D2_FA",
+      "F_TRIG"
+    ],
+    "helpful": [
+      "D1_VARIABLE"
+    ],
+    "source": {
+      "file": "D2.pdf",
+      "pages": [
+        7,
+        16
+      ]
+    },
+    "outcomes": [
+      "Point the normal towards curvature",
+      "Use v^2/rho",
+      "Separate speed change from direction change"
+    ],
+    "practice_prompt": "At a specified point on a track, draw inward normal and tangent axes, then write their force equations separately.",
+    "common_mistake": "Setting normal acceleration to zero just because the speed is constant.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "At constant nonzero speed on a circle of radius r, which acceleration remains?",
+      "options": [
+        "Zero acceleration",
+        "Inward normal acceleration v^2/r",
+        "Tangential acceleration v^2/r"
+      ],
+      "answer": 1,
+      "explanation": "Speed is constant, but velocity direction changes, producing inward normal acceleration.",
+      "repair_topic": "D1_KIN"
+    }
+  },
+  {
+    "id": "D3_WE",
+    "title": "Particle work and energy",
+    "short_title": "Particle energy",
+    "area": "Dynamics",
+    "session": 3,
+    "description": "Connect net work over a displacement to a change in particle kinetic energy, including springs and friction.",
+    "required": [
+      "D2_FA",
+      "F_ALG"
+    ],
+    "helpful": [
+      "F_CALC"
+    ],
+    "source": {
+      "file": "D3.pdf",
+      "pages": [
+        1,
+        10
+      ]
+    },
+    "outcomes": [
+      "Identify positive, negative and zero work",
+      "Include all working forces",
+      "Use energy to find speed"
+    ],
+    "practice_prompt": "Draw initial and final states, list the work of each force, and use T1 + sum U = T2.",
+    "common_mistake": "Using energy alone to answer a question asking directly for elapsed time.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A constant kinetic friction force opposes a nonzero displacement. What is its work on the body?",
+      "options": [
+        "Positive",
+        "Negative",
+        "Zero"
+      ],
+      "answer": 1,
+      "explanation": "The friction force is opposite displacement, so its dot product with displacement is negative.",
+      "repair_topic": "S1_FORCE"
+    }
+  },
+  {
+    "id": "D3_CONSERVE",
+    "title": "Potential energy, power and method choice",
+    "short_title": "Energy or forces?",
+    "area": "Dynamics",
+    "session": 3,
+    "description": "Choose between force-acceleration, work-energy and conservation of mechanical energy; include nonconservative work and power appropriately.",
+    "required": [
+      "D3_WE"
+    ],
+    "helpful": [
+      "D2_CURVE"
+    ],
+    "source": {
+      "file": "D3.pdf",
+      "pages": [
+        10,
+        19
+      ]
+    },
+    "outcomes": [
+      "Choose a method from the requested unknown",
+      "Account for nonconservative work",
+      "Relate power and work rate"
+    ],
+    "practice_prompt": "For a smooth track with a spring, use energy for speed, then force balance if the question also asks for a normal reaction.",
+    "common_mistake": "Ignoring friction or motor work while claiming mechanical energy is conserved.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A particle moves on a rough track. Can T1 + V1 = T2 + V2 be used while ignoring friction work?",
+      "options": [
+        "Yes, always",
+        "No, the friction work must be accounted for",
+        "Only mass needs changing"
+      ],
+      "answer": 1,
+      "explanation": "Nonconservative work changes mechanical energy; include it in the energy balance.",
+      "repair_topic": "D3_WE"
+    }
+  },
+  {
+    "id": "D4_RBV",
+    "title": "Rigid-body velocity and relative motion",
+    "short_title": "Rigid-body velocity",
+    "area": "Dynamics",
+    "session": 4,
+    "description": "Describe translation, fixed-axis rotation and general plane motion using velocity compatibility.",
+    "required": [
+      "D1_KIN",
+      "S1_FORCE",
+      "F_TRIG"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "D4.pdf",
+      "pages": [
+        1,
+        5
+      ]
+    },
+    "outcomes": [
+      "Classify plane motion",
+      "Use vB = vA + omega cross rBA",
+      "Apply slider and pin constraints"
+    ],
+    "practice_prompt": "Write known velocity directions first. Use shared-pin velocity compatibility before solving link angular velocities.",
+    "common_mistake": "Assigning the velocity of one body point to every point on a rotating rigid body.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "In general plane motion, which relative-velocity relation is correct?",
+      "options": [
+        "vB = vA + omega cross rBA",
+        "vB = omega rBA for every reference point",
+        "vB = vA always"
+      ],
+      "answer": 0,
+      "explanation": "Translation of A and rotation relative to A both contribute.",
+      "repair_topic": "S1_FORCE"
+    }
+  },
+  {
+    "id": "D4_IC",
+    "title": "Instantaneous centres and no-slip velocity transfer",
+    "short_title": "IC & no slip",
+    "area": "Dynamics",
+    "session": 4,
+    "description": "Use instantaneous centres for velocity and apply compatible tangential velocities in rolling, gears, belts and pulleys.",
+    "required": [
+      "D4_RBV"
+    ],
+    "helpful": [],
+    "source": {
+      "file": "D4.pdf",
+      "pages": [
+        6,
+        14
+      ]
+    },
+    "outcomes": [
+      "Locate an instantaneous centre",
+      "Apply no-slip velocity relations",
+      "Recognise the IC limitation"
+    ],
+    "practice_prompt": "Locate an IC from known velocity directions. Calculate a speed, then check with relative velocity.",
+    "common_mistake": "Assuming a point with zero instantaneous velocity must also have zero acceleration.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "A rolling wheel has a contact point with zero instantaneous velocity. Must that point acceleration also be zero?",
+      "options": [
+        "Yes",
+        "No",
+        "Only when the wheel radius is known"
+      ],
+      "answer": 1,
+      "explanation": "An instantaneous zero-velocity point need not be a zero-acceleration point.",
+      "repair_topic": "D4_RBV"
+    }
+  },
+  {
+    "id": "D5_RBA",
+    "title": "Rigid-body acceleration and linked systems",
+    "short_title": "Rigid-body acceleration",
+    "area": "Dynamics",
+    "session": 5,
+    "description": "Complete velocity analysis, then include tangential and normal terms in relative acceleration with the correct constraints.",
+    "required": [
+      "D4_RBV",
+      "D1_KIN"
+    ],
+    "helpful": [
+      "D4_IC",
+      "F_CALC"
+    ],
+    "source": {
+      "file": "D5.pdf",
+      "pages": [
+        1,
+        10
+      ]
+    },
+    "outcomes": [
+      "Find omega before acceleration",
+      "Include alpha cross r and -omega^2 r",
+      "Respect slider and pin constraints"
+    ],
+    "practice_prompt": "Write aB = aA + alpha cross rBA - omega^2 rBA. Label the direction of each term before solving components.",
+    "common_mistake": "Leaving out the normal omega^2 r term or treating the instantaneous centre as a fixed pin.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "Which acceleration term points from B towards A in the standard relative-acceleration equation?",
+      "options": [
+        "alpha cross rBA",
+        "-omega^2 rBA",
+        "vA"
+      ],
+      "answer": 1,
+      "explanation": "The normal term -omega^2 rBA points towards the reference point.",
+      "repair_topic": "D4_RBV"
+    }
+  },
+  {
+    "id": "D6_MASS",
+    "title": "Mass moment of inertia and rigid-body kinetic energy",
+    "short_title": "Mass inertia & KE",
+    "area": "Dynamics",
+    "session": 6,
+    "description": "Distinguish mass moment of inertia from area moment, and choose kinetic energy for translation, rotation or general plane motion.",
+    "required": [
+      "D4_RBV",
+      "F_UNITS"
+    ],
+    "helpful": [
+      "S4_MOI"
+    ],
+    "source": {
+      "file": "D6.pdf",
+      "pages": [
+        1,
+        4
+      ]
+    },
+    "outcomes": [
+      "Distinguish kg m^2 from m^4",
+      "Choose IG or a fixed-axis IO",
+      "Include translation and rotation"
+    ],
+    "practice_prompt": "Classify a sliding block, a pinned rod and a rolling wheel. Write a suitable kinetic-energy expression for each.",
+    "common_mistake": "Using an area second moment in a rotational kinetic-energy expression.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "For a rigid body in general plane motion, which expression is valid using its mass centre G?",
+      "options": [
+        "T = 0.5 m vG^2 only",
+        "T = 0.5 m vG^2 + 0.5 IG omega^2",
+        "T = IG omega"
+      ],
+      "answer": 1,
+      "explanation": "General plane motion combines mass-centre translation and rotation about G.",
+      "repair_topic": "D4_RBV"
+    }
+  },
+  {
+    "id": "D6_RBE",
+    "title": "Rigid-body work-energy and rolling systems",
+    "short_title": "Rigid-body energy",
+    "area": "Dynamics",
+    "session": 6,
+    "description": "Apply work-energy to translating and rotating bodies, including force work, couple work and rolling constraints.",
+    "required": [
+      "D6_MASS",
+      "D3_WE",
+      "D4_RBV"
+    ],
+    "helpful": [
+      "D4_IC",
+      "D3_CONSERVE"
+    ],
+    "source": {
+      "file": "D6.pdf",
+      "pages": [
+        3,
+        18
+      ]
+    },
+    "outcomes": [
+      "Include rotational kinetic energy",
+      "Calculate force and couple work",
+      "Use no-slip constraints where valid"
+    ],
+    "practice_prompt": "Draw the two configurations, include both kinetic-energy terms, list work terms and apply a valid rolling constraint.",
+    "common_mistake": "Omitting rotational energy or automatically counting static rolling friction as energy loss.",
+    "activities": [
+      "QG",
+      "LN",
+      "T",
+      "H",
+      "SBS",
+      "APP",
+      "SIA",
+      "EXIT"
+    ],
+    "check": {
+      "question": "In pure rolling without slip on a stationary surface, what is the speed relation for wheel centre G?",
+      "options": [
+        "vG = r omega",
+        "vG = r alpha",
+        "vG = omega / r"
+      ],
+      "answer": 0,
+      "explanation": "The no-slip velocity constraint gives vG = r omega.",
+      "repair_topic": "D4_IC"
+    }
+  }
 ]
