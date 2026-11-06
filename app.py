@@ -57,6 +57,12 @@ section[data-testid="stSidebar"]{background:white;border-right:1px solid var(--l
 [data-testid="stVerticalBlockBorderWrapper"]>div{border-radius:17px!important}.stButton button,.stDownloadButton button,.stLinkButton a{border-radius:10px;font-weight:600}.stButton button[kind="primary"]{background:#146f78;border-color:#146f78;color:white}.stButton button[kind="primary"]:hover{background:#105c64;border-color:#105c64}
 div[data-baseweb="select"]>div{border-radius:10px}[data-testid="stMetricValue"]{font-size:1.5rem}button:focus-visible{outline:3px solid #357cb6!important;outline-offset:2px}
 @media(max-width:800px){.brand{gap:12px}.brand h1{font-size:28px!important}.brand-mark{transform:scale(.87);transform-origin:left center;width:51px;flex-basis:51px}.brand small{font-size:9px!important}.block-container{padding-top:4.25rem;padding-left:1rem;padding-right:1rem}.hero{padding:22px 20px;border-radius:16px}.hero h1{max-width:95%;font-size:1.65rem}.hero-tags{gap:5px}.hero-tag{font-size:10px}.focus-title{font-size:1.3rem}}
+/* The app's structure, dimensions and colour mapping stay unchanged. */
+.mini-stat,.compact-meta span,[data-testid="stExpander"],[data-testid="stPopoverBody"]{background:rgba(255,255,255,.82);backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);box-shadow:inset 0 1px 0 #ffffffd9,0 5px 20px #17374c05}
+.stButton button,.stDownloadButton button,.stLinkButton a,[data-testid="stPopover"] button{transition:background-color 170ms ease,box-shadow 170ms ease}
+.stButton button:hover,.stDownloadButton button:hover,.stLinkButton a:hover,[data-testid="stPopover"] button:hover{box-shadow:0 4px 13px #17374c10}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,7 +70,8 @@ div[data-baseweb="select"]>div{border-radius:10px}[data-testid="stMetricValue"]{
 ss = st.session_state
 for key, value in {"progress": blank_progress(), "focus": "S1_FORCE", "area_picker": "Statics",
                    "topic_picker": "S1_FORCE", "resource_picker": "LN", "storage_ready": False,
-                   "storage_failed": False, "boot": str(uuid4()), "handled_events": [], "epoch": 0}.items():
+                   "storage_failed": False, "boot": str(uuid4()), "handled_events": [], "epoch": 0,
+                   "completion_notice": None}.items():
     if key not in ss:
         ss[key] = value
 
@@ -133,6 +140,7 @@ def handle_event(event):
             block = resources[parts[1]]
         if event["completed"]:
             ss.progress["completed"][key] = {"date": today.isoformat(), "minutes": block["minutes"]}
+            ss.completion_notice = {"key": key, "event_id": str(uuid4())}
         else:
             ss.progress["completed"].pop(key, None)
         ss.epoch += 1
@@ -161,6 +169,7 @@ def handle_event(event):
 def toggle_activity(key, widget_key, duration):
     if ss[widget_key]:
         ss.progress["completed"][key] = {"date": today.isoformat(), "minutes": duration}
+        ss.completion_notice = {"key": key, "event_id": str(uuid4())}
     else:
         ss.progress["completed"].pop(key, None)
 
@@ -288,6 +297,7 @@ if view == "My pathway":
         "next": first, "source": source_text(topic), "check_result": p["checks"].get(topic["id"]),
         "gaps": [dict(by_topic[t], level=level(p, t)) for t in missing],
         "rating": level(p, topic["id"]), "repair_title": by_topic[topic["check"]["repair_topic"]]["short_title"],
+        "completion_notice": ss.completion_notice,
     }, key="resource_orbit", default=None)
     handle_event(event)
 
