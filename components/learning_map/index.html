@@ -60,6 +60,11 @@
   @keyframes panel-close-mobile{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(8px)}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}.node-motion{transform:none!important}.connection-flow{display:none}.day:hover,.day:focus-within{transform:none}}
 
+  .week-context{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin:0 0 12px;color:#597186;font-size:12px}.week-context strong{font-size:15px;color:#203f57}.week-context span:last-child{margin-left:auto}
+  .week.week-v2{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}.week.week-v2.single-day{grid-template-columns:1fr}.week-v2 .day{padding:22px 24px;border-radius:18px;min-width:0}.study-day-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding-bottom:18px;border-bottom:1px solid #e0e8ef}.week-v2 .day h3{font-size:18px;line-height:1.4;margin:0 0 3px;color:#1e3c55}.study-day-header p{font-size:11px;color:#60798e;margin:0;line-height:1.5}.day-budget{white-space:nowrap;font-size:12px;font-weight:750;color:#246b64;padding:7px 11px;border-radius:20px;background:#edf6f3;border:1px solid #d3e7df}.focus-session{padding-top:18px}.focus-session+.focus-session{margin-top:18px;border-top:1px solid #e2eaf1}.focus-session-label{display:flex;justify-content:space-between;gap:10px;margin:0 0 7px;color:#60778b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}.focus-session-label span:last-child{white-space:nowrap;letter-spacing:0}.focus-session-title{display:block;border:0;background:transparent!important;text-align:left;padding:0!important;min-height:0!important;font-size:19px!important;font-weight:750;color:#153f5a;line-height:1.35;letter-spacing:-.02em;max-width:100%;overflow-wrap:anywhere;border-radius:4px}.focus-session-title:hover{text-decoration:underline;text-underline-offset:4px}.session-aim{font-size:12px;color:#5d7589;margin:7px 0 18px;line-height:1.6}.timed-task{display:grid;grid-template-columns:72px 34px minmax(0,1fr);gap:12px;position:relative;padding:14px 0;border-top:1px solid #e7edf3;align-items:start}.timed-task:first-child{border-top:0}.slot-time{text-align:left;font-variant-numeric:tabular-nums;line-height:1.45;padding-top:1px}.slot-time strong{display:block;font-size:12px;color:#2c4c65;white-space:nowrap}.slot-time small,.slot-time .time-end{display:block;font-size:10px;color:#6c8294;margin-top:3px}.slot-time .time-end{margin-top:0}.task-copy{min-width:0}.task-title{display:block;font-size:14px;color:#203f57;line-height:1.45;margin:0 0 4px}.task-guidance{font-size:12px;line-height:1.65;margin:0 0 4px;color:#506e84}.task-source{display:block;font-size:10px;color:#6a8195;line-height:1.6;margin:4px 0}.task-instructions{font-size:11px;color:#58748a;margin-top:7px}.task-instructions summary{cursor:pointer;width:fit-content}.task-instructions p{font-size:12px;line-height:1.65;margin:8px 0;color:#48677d}.timed-task.is-warmup .task-title{color:#56647e}.timed-task.is-warmup{background:linear-gradient(90deg,#f2f5f880,transparent);border-radius:10px}.study-pause{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;margin:12px 0 0;background:#edf2f780;border:1px dashed #cfdce6;border-radius:10px;color:#60798d;font-size:11px}.study-pause strong{font-variant-numeric:tabular-nums;color:#4f6a80}.week-v2 .bubble{width:34px;height:34px;font-size:10px}
+  @media(max-width:900px){.week.week-v2{grid-template-columns:1fr}.week-context span:last-child{margin-left:0}}
+  @media(max-width:480px){.week-v2 .day{padding:18px 15px}.week-v2 .day h3{font-size:16px}.focus-session-title{font-size:17px!important}.timed-task{grid-template-columns:52px 29px minmax(0,1fr);gap:9px}.week-v2 .bubble{width:29px;height:29px;font-size:9px}.slot-time strong{font-size:11px}.task-title{font-size:13px}.task-guidance{font-size:11px}.day-budget{font-size:11px;padding:5px 8px}.focus-session-label{font-size:9px}}
+
 </style>
 </head>
 <body><div id="root"></div><div id="live" class="sr-only" aria-live="polite"></div>
@@ -396,20 +401,48 @@
     root.appendChild(html('p','note','Arrows point from earlier knowledge to the topic that uses it. Solid = required; dashed = helpful. A dashed circle means not checked. Use zoom or drag the background for a closer view.'));
   }
   function weekMap(){
-    const catalog=materialCatalog(args.payload);root.appendChild(weeklyMaterialKey(catalog));
-    const materialById=Object.fromEntries(catalog.map(m=>[m.id,m]));
-    const week=html('div','week');
-    for(const day of args.payload.days){
-      const card=html('article','day'),when=new Date(day.date+'T12:00:00');
-      card.appendChild(html('h3','',when.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'short'})));
-      card.appendChild(html('div','total',day.minutes+' min planned'+(day.unused?' · '+day.unused+' min spare':'')));
-      day.blocks.forEach(b=>{
-        const row=html('div','block'),bubble=materialBadge(materialById[b.id]||b,'bubble');
-        const button=html('button');button.appendChild(html('strong','',b.topic_title));button.appendChild(html('small','',b.title+' · '+b.minutes+' min'));
-        button.setAttribute('aria-label','Explore '+b.topic_title);button.addEventListener('click',()=>value({kind:'topic',id:b.topic_id,view:'My pathway'}));row.append(bubble,button);card.appendChild(row);
-      });week.appendChild(card);
-    }root.appendChild(week);
-    root.appendChild(html('p','note','Your dates are personal study suggestions. Re-check understanding before moving to a dependent topic. Click any activity to explore that topic.'));
+    const p=args.payload,catalog=materialCatalog(p),materialById=Object.fromEntries(catalog.map(m=>[m.id,m]));
+    const context=html('div','week-context');context.append(html('strong','','Your study plan'),html('span','',p.goal||'Focused practice'),html('span','',p.clock_times?'Clock times · Queensland':'Elapsed minutes · start when ready'));root.appendChild(context);
+    root.appendChild(weeklyMaterialKey(catalog));
+    const week=html('div','week week-v2');if(p.days.length===1)week.classList.add('single-day');
+    const sourceText=source=>source?source.file+' · '+(source.pages[0]===source.pages[1]?'p. '+source.pages[0]:'pp. '+source.pages[0]+'–'+source.pages[1]):'';
+    const shortInstructions=(b,session)=>{
+      if(b.phase==='warmup')return 'Refresh this building block briefly, then return to '+session.short_title+'.';
+      if(b.phase==='recall')return 'Recall the method from the earlier attempt, with notes closed.';
+      return {LN:'Cover the worked solution and attempt an example on '+session.short_title+'.',T:'Attempt the topic-matched tutorial questions and mark the step where you need help.',H:'Try a fresh problem independently, then check the method, signs and units.',EXIT:'Outline a method without notes and record what needs another attempt.',QG:'Preview the key ideas and method-selection rules, then close the guide.',SBS:'Use short step-by-step support, then retry the method yourself.'}[b.id]||b.guidance;
+    };
+    const timeWindow=b=>{
+      const node=html('div','slot-time');node.setAttribute('aria-label',`${b.start_label} to ${b.end_label}, ${b.minutes} minutes`);
+      if(p.clock_times){node.append(html('strong','',b.start_label),html('span','time-end','to '+b.end_label));}
+      else node.appendChild(html('strong','',b.start_label+'–'+b.end_label));
+      node.appendChild(html('small','',b.minutes+' min'));return node;
+    };
+    for(const day of p.days){
+      const card=html('article','day'),when=new Date(day.date+'T12:00:00');card.dataset.date=day.date;
+      const head=html('header','study-day-header'),dateLabel=html('div');
+      dateLabel.append(html('h3','',when.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'short'})),html('p','',p.clock_times?day.start_label+'–'+day.end_label:'Minutes from the start of your study'));
+      head.append(dateLabel,html('span','day-budget',day.minutes+' min'));card.appendChild(head);
+      day.sessions.forEach((session,index)=>{
+        const section=html('section','focus-session');section.dataset.topic=session.topic_id;
+        const label=html('div','focus-session-label');label.append(html('span','',session.phase),html('span','',session.start_label+'–'+session.end_label+(p.clock_times?'':' min')));section.appendChild(label);
+        const title=html('button','focus-session-title',session.topic_title);title.type='button';title.setAttribute('aria-label','Open pathway for '+session.topic_title);title.addEventListener('click',()=>value({kind:'topic',id:session.topic_id,view:'My pathway'}));section.appendChild(title);
+        section.appendChild(html('p','session-aim','Aim: '+session.aim));
+        const tasks=html('div','session-tasks');
+        session.blocks.forEach(b=>{
+          const row=html('div','timed-task'+(b.role==='prerequisite'?' is-warmup':''));row.dataset.topic=b.topic_id;row.dataset.focus=session.topic_id;row.dataset.role=b.role;
+          const copy=html('div','task-copy');copy.append(html('strong','task-title',b.title),html('p','task-guidance',shortInstructions(b,session)));
+          if(b.id==='LN')copy.appendChild(html('span','task-source',sourceText(b.source)));
+          const details=html('details','task-instructions');details.append(html('summary','','Instructions'),html('p','',b.guidance));
+          if(!['LN','EXIT'].includes(b.id))details.appendChild(html('p','task-source','Use the '+session.short_title+' material on the EG1011 course site.'));
+          copy.appendChild(details);row.append(timeWindow(b),materialBadge(materialById[b.id]||b,'bubble'),copy);tasks.appendChild(row);
+        });section.appendChild(tasks);card.appendChild(section);
+        const rest=day.blocks.find(b=>b.role==='break'&&b.start_minute===session.end_minute);
+        if(rest){const pause=html('div','study-pause');pause.append(html('strong','',rest.start_label+'–'+rest.end_label+(p.clock_times?'':' min')),html('span','',rest.minutes+' min break · then begin the next focus block'));card.appendChild(pause);}
+      });
+      week.appendChild(card);
+    }
+    root.appendChild(week);
+    root.appendChild(html('p','note','Follow each day from top to bottom. The warm-up supports your chosen topic; use the exit check to decide what needs another attempt. Click a topic heading to open its learning pathway.'));
   }
   function storage(){
     const status=html('div','storage');root.appendChild(status);
