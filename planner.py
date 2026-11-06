@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 import csv
 import io
 import json
@@ -236,76 +237,231 @@ def build_session(topic_id, by_id, resources, progress, minutes=60,
             "minutes": sum(b["minutes"] for b in plan), "budget": minutes}
 
 
-def build_week(topic_ids, by_id, resources, progress, start, weekdays, daily_minutes, goal=GOALS[0]):
-    """Prerequisite-first route with hard daily capacity and a visible backlog.
+def _weekly_warmup(topic_id, by_id, progress):
+    """Choose one relevant gap; never expand the full prerequisite curriculum."""
+    topic = by_id[topic_id]
+    check = progress.get("checks", {}).get(topic_id)
+    if check and not check["correct"]:
+        repair = topic["check"]["repair_topic"]
+        if repair != topic_id:
+            return repair
+    direct = [t for t in topic["required"] if needs_review(progress, t)]
+    explicit = [t for t in direct if level(progress, t) == 1
+                or progress.get("checks", {}).get(t, {}).get("correct") is False]
+    if explicit:
+        return explicit[0]
+    # Unknown background is not proof of a gap in an already-practised topic.
+    if level(progress, topic_id) >= 2:
+        return None
+    return next((t for t in direct if by_id[t]["area"] != "Foundations"), next(iter(direct), None))
 
-    Scheduling an activity does not assert that the prerequisite is mastered.
-    Each new study day includes a short retrieval revisit when capacity allows.
+
+def _weekly_focus_session(topic_id, budget, visit, by_id, resources, progress, goal, spaced):
+    topic = by_id[topic_id]
+    blocks = []
+    exit_minutes = 3 if budget < 30 else 5
+    preparation = _weekly_warmup(topic_id, by_id, progress) if visit == 0 else None
+    lead_minutes = min(5, max(2, budget // 10)) if preparation or visit else 0
+    remaining = budget - lead_minutes - exit_minutes
+
+    def block(resource_id, minutes, title, guidance, target=topic_id, role="practice", phase="practice"):
+        item = dict(resources[resource_id], topic_id=target, topic_title=by_id[target]["title"],
+                    focus_id=topic_id, focus_title=topic["title"], minutes=minutes,
+                    title=title, guidance=guidance, role=role, phase=phase,
+                    key=activity_key(target, resource_id, role),
+                    resource_title=resources[resource_id]["title"],
+                    reason="Practise the selected topic within the time you set.",
+                    source=deepcopy(by_id[target]["source"]))
+        blocks.append(item)
+        return item
+
+    if preparation:
+        previous = by_id[preparation]
+        block("LN", lead_minutes, "Warm-up: " + previous["short_title"],
+              f"For {topic['short_title']}, briefly reconnect with {previous['short_title']}. "
+              f"{previous['practice_prompt']} Keep this review to {lead_minutes} minutes, then start the selected topic.",
+              target=preparation, role="prerequisite", phase="warmup")
+    elif visit:
+        block("EXIT", lead_minutes, "Spaced recall" if spaced else "Quick recall",
+              f"With notes closed, recall the main method for {topic['short_title']}. "
+              "Use the previous attempt to identify one step to improve today.", role="review", phase="recall")
+
+    known = level(progress, topic_id) >= 2
+    if goal == "Prepare for a lecture":
+        order = ["QG", "LN", "T"]
+    elif goal == "Prepare for a tutorial":
+        order = ["T", "LN", "H"]
+    elif goal == "Quiz or exam revision":
+        order = ["H", "T", "LN"] if known or visit else ["T", "H", "LN"]
+    elif goal == "Understand a difficult topic" or level(progress, topic_id) == 1:
+        order = ["LN", "SBS", "T", "H"]
+    else:
+        order = ["H", "T", "LN"] if known or visit else ["LN", "T", "H"]
+    titles = {"LN": "Re-solve a lecture example", "T": "Work through T-type questions",
+              "H": "Attempt an H-type problem independently", "QG": "Preview the QuickGuide",
+              "SBS": "Unblock the method with Step by Step"}
+    instructions = {
+        "LN": topic["practice_prompt"] + " Cover the worked solution before attempting it.",
+        "T": f"Attempt the {topic['short_title']} T-type questions. Write your method and mark the exact step where you need help.",
+        "H": f"Attempt a fresh {topic['short_title']} H-type problem with the solution closed. Check your diagram, method, signs and units.",
+        "QG": f"Preview the key ideas and method-selection rules for {topic['short_title']}; then close the guide and explain the approach.",
+        "SBS": "Use the topic-matched Step by Step PDF for the point where your attempt stalled. Close it and retry that step yourself.",
+    }
+    core = []
+    for resource_id in order:
+        if resource_id not in topic["activities"]:
+            continue
+        minimum = resources[resource_id]["minimum_minutes"]
+        if remaining < minimum:
+            continue
+        core.append(block(resource_id, minimum, titles[resource_id], instructions[resource_id]))
+        remaining -= minimum
+    # Allocate meaningful minimum attempts first, then deepen them. A short
+    # lecture example must not consume the entire budget before tutorial work.
+    for item in core:
+        extra = min(remaining, max(0, resources[item["id"]]["minutes"] - item["minutes"]))
+        item["minutes"] += extra
+        remaining -= extra
+    active = [b for b in core if b["id"] in ("LN", "T", "H")]
+    if remaining and (active or core):
+        (active or core)[-1]["minutes"] += remaining
+        remaining = 0
+    block("EXIT", exit_minutes, "Check your understanding",
+          f"With notes closed, choose the method for one fresh {topic['short_title']} problem and outline the solution. "
+          "Record the step that still needs practice.", phase="check")
+    return {"topic_id": topic_id, "topic_title": topic["title"], "short_title": topic["short_title"],
+            "minutes": sum(b["minutes"] for b in blocks), "blocks": blocks,
+            "visit": visit + 1, "phase": "First focused session" if visit == 0 else "Revisit and apply",
+            "aim": topic["outcomes"][0], "preparation": preparation,
+            "source": deepcopy(topic["source"]), "short_session": budget < 30}
+
+
+def _weekly_time_label(offset, start_clock):
+    if start_clock is None:
+        return str(offset).zfill(2)
+    total = start_clock.hour * 60 + start_clock.minute + offset
+    return f"{(total // 60) % 24:02d}:{total % 60:02d}" + (" +1d" if total >= 1440 else "")
+
+
+def build_week(topic_ids, by_id, resources, progress, start, weekdays, daily_minutes,
+               goal=GOALS[0], *, start_time=None):
+    """Focus-first, budget-limited sessions; background is a bounded warm-up.
+
+    Chosen topics are ordered relative to each other, not behind the entire
+    transitive foundation graph. Every scheduled session practises a selected
+    topic. Scheduling never changes the learner's knowledge ratings.
     """
+    empty = {"days": [], "backlog": [], "route": [], "capacity": 0, "minutes": 0,
+             "focus_minutes": 0, "warmup_minutes": 0, "break_minutes": 0,
+             "scheduled_topics": [], "unscheduled": [], "goals": [], "clock_times": False}
     if not topic_ids or not weekdays:
-        return {"days": [], "backlog": [], "route": [], "capacity": 0, "minutes": 0}
-    if type(daily_minutes) is not int or not 15 <= daily_minutes <= 180:
-        raise ValueError("Daily study time must be 15 to 180 minutes.")
+        return empty
+    if type(start) is not date:
+        raise ValueError("Choose a valid first planning date.")
     if any(type(day) is not int or day not in range(7) for day in weekdays):
         raise ValueError("Invalid weekday selection.")
+    selected = list(dict.fromkeys(topic_ids))
+    if any(t not in by_id for t in selected):
+        raise ValueError("Choose topics from the course map.")
+    route = [t for t in prerequisite_order(selected, by_id) if t in selected]
+    if type(daily_minutes) is int:
+        budgets = {d: daily_minutes for d in set(weekdays)}
+    elif isinstance(daily_minutes, dict):
+        if any(type(k) is not int or k not in range(7) for k in daily_minutes):
+            raise ValueError("Invalid daily time setting.")
+        budgets = {d: daily_minutes.get(d) for d in set(weekdays)}
+    else:
+        raise ValueError("Set the available minutes for each study day.")
+    if any(type(value) is not int or not 15 <= value <= 180 for value in budgets.values()):
+        raise ValueError("Each selected study day needs between 15 and 180 minutes.")
+    if start_time is not None:
+        try:
+            start_clock = time.fromisoformat(start_time) if isinstance(start_time, str) else start_time
+            if not isinstance(start_clock, time) or start_clock.tzinfo is not None:
+                raise ValueError
+            start_clock = start_clock.replace(second=0, microsecond=0)
+        except (TypeError, ValueError):
+            raise ValueError("Choose a valid local study start time.") from None
+    else:
+        start_clock = None
     dates = [start + timedelta(days=i) for i in range(7)
              if (start + timedelta(days=i)).weekday() in weekdays]
-    route = [t for t in prerequisite_order(topic_ids, by_id)
-             if t in topic_ids or needs_review(progress, t)]
-    queue = []
-    for t in route:
-        # A weekly route includes an independent attempt, even when its blocks
-        # have to continue on the next chosen study day.
-        budget = 25 if by_id[t]["area"] == "Foundations" else 70
-        session = build_session(t, by_id, resources, progress, budget, goal=goal,
-                                confidence="Low" if level(progress, t) == 1 else "High" if level(progress, t) == 3 else "Medium",
-                                include_prerequisites=False)
-        queue.extend(deepcopy(session["blocks"]))
-    days, studied = [], []
-    due = [t for t, _ in due_topics(progress, by_id, start)]
-    for day_index, day in enumerate(dates):
-        blocks, left = [], daily_minutes
-        revisit = studied[-1] if studied else (due[0] if due else None)
-        if revisit and left >= 15:
-            blocks.append(dict(resources["EXIT"], topic_id=revisit,
-                               topic_title=by_id[revisit]["title"], minutes=5,
-                               title="Spaced recall", role="review",
-                               key=f"{revisit}|EXIT|review", reason="Retrieve an earlier method before new practice.",
-                               guidance="With notes closed, outline a problem method from the earlier topic. If it is unclear, adjust the next session before progressing."))
-            left -= 5
-            if not studied and due:
-                due.pop(0)
-        while queue and left >= queue[0]["minimum_minutes"]:
-            item = queue.pop(0)
-            item["minutes"] = min(item["minutes"], left)
-            left -= item["minutes"]
-            blocks.append(item)
-            if item["id"] == "EXIT" and item["role"] == "practice":
-                studied.append(item["topic_id"])
-        # Once the first route is scheduled, give later days meaningful transfer
-        # practice, rather than filling a day with passive support materials.
-        if not queue and left >= 25:
-            focus = topic_ids[day_index % len(topic_ids)]
-            resource_id = "H" if "H" in by_id[focus]["activities"] else "LN"
-            if not any(b["topic_id"] == focus and b["id"] == resource_id for b in blocks):
-                duration = min(30, left - 5)
-                blocks.append(dict(resources[resource_id], topic_id=focus,
-                                   topic_title=by_id[focus]["title"], minutes=duration,
-                                   title="Fresh independent attempt" if resource_id == "H" else "Re-solve with notes closed",
-                                   role="review", key=activity_key(focus, resource_id, "review"),
-                                   reason="Test transfer after the first learning route; revisit foundations if you need help."))
-                blocks.append(dict(resources["EXIT"], topic_id=focus,
-                                   topic_title=by_id[focus]["title"], minutes=5,
-                                   role="review", key=activity_key(focus, "EXIT", "review"),
-                                   reason="Explain what changed between the earlier attempt and this one."))
-                left -= duration + 5
-        if blocks:
-            days.append({"date": day.isoformat(), "blocks": blocks,
-                         "minutes": sum(b["minutes"] for b in blocks), "unused": left})
-    return {"days": days, "backlog": queue, "route": route,
-            "capacity": len(dates) * daily_minutes,
-            "minutes": sum(d["minutes"] for d in days)}
+    visits = {t: 0 for t in route}
+    last_date = {}
+    days = []
+    for day in dates:
+        capacity = budgets[day.weekday()]
+        new_count = sum(visits[t] == 0 for t in route)
+        slots = max(1, min(new_count, capacity // 15), math.ceil(capacity / 60))
+        # Longer study days include explicit pauses inside, not beyond, budget.
+        rest = 5 if capacity >= 90 and slots > 1 else 0
+        while slots > 1 and (capacity - rest * (slots - 1)) // slots < 15:
+            slots -= 1
+        usable = capacity - rest * (slots - 1)
+        length, extra = divmod(usable, slots)
+        sessions, blocks, cursor = [], [], 0
+        for index in range(slots):
+            target = next((t for t in route if visits[t] == 0), None)
+            if target is None:
+                target = min(route, key=lambda t: (visits[t], route.index(t)))
+            budget = length + (index < extra)
+            session = _weekly_focus_session(target, budget, visits[target], by_id, resources,
+                                            progress, goal, last_date.get(target) != day)
+            session["start_minute"] = cursor
+            session["start_label"] = _weekly_time_label(cursor, start_clock)
+            for item in session["blocks"]:
+                item["start_minute"] = cursor
+                item["start_label"] = _weekly_time_label(cursor, start_clock)
+                cursor += item["minutes"]
+                item["end_minute"] = cursor
+                item["end_label"] = _weekly_time_label(cursor, start_clock)
+                blocks.append(item)
+            session["end_minute"] = cursor
+            session["end_label"] = _weekly_time_label(cursor, start_clock)
+            sessions.append(session)
+            visits[target] += 1
+            last_date[target] = day
+            if rest and index < slots - 1:
+                pause = {"id": "BREAK", "symbol": "REST", "color": "#607589", "title": "Short break",
+                         "topic_id": "", "topic_title": "", "focus_id": "", "focus_title": "",
+                         "resource_title": "Break", "minutes": rest, "role": "break", "phase": "break",
+                         "reason": "A pause between focused study blocks.", "guidance": "Take a short break, then return for the next focused block.",
+                         "start_minute": cursor, "start_label": _weekly_time_label(cursor, start_clock)}
+                cursor += rest
+                pause.update(end_minute=cursor, end_label=_weekly_time_label(cursor, start_clock))
+                blocks.append(pause)
+        days.append({"date": day.isoformat(), "sessions": sessions, "blocks": blocks,
+                     "minutes": cursor, "capacity": capacity, "unused": capacity-cursor,
+                     "start_time": start_clock.strftime("%H:%M") if start_clock else None,
+                     "start_label": _weekly_time_label(0, start_clock),
+                     "end_label": _weekly_time_label(cursor, start_clock)})
+    all_blocks = [b for d in days for b in d["blocks"]]
+    uncovered = [{"topic_id": t, "topic_title": by_id[t]["title"], "minutes": 15,
+                  "reason": "Add at least one more focused study slot to include this chosen topic."}
+                 for t in route if visits[t] == 0]
+    return {"days": days, "route": route, "backlog": uncovered, "unscheduled": uncovered,
+            "capacity": sum(d["capacity"] for d in days), "minutes": sum(d["minutes"] for d in days),
+            "focus_minutes": sum(b["minutes"] for b in all_blocks if b["role"] not in ("prerequisite", "break")),
+            "warmup_minutes": sum(b["minutes"] for b in all_blocks if b["role"] == "prerequisite"),
+            "break_minutes": sum(b["minutes"] for b in all_blocks if b["role"] == "break"),
+            "scheduled_topics": [t for t in route if visits[t]],
+            "goals": [{"id": t, "title": by_id[t]["title"], "sessions": visits[t]} for t in route],
+            "clock_times": start_clock is not None, "goal": goal}
 
+
+def weekly_csv(week):
+    output = io.StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(("Date", "Start", "End", "Time basis", "Focus topic", "Activity topic",
+                     "Material", "Activity", "Minutes", "Instructions"))
+    for day in week["days"]:
+        for block in day["blocks"]:
+            cells = (day["date"], block["start_label"], block["end_label"],
+                     "Queensland time" if week["clock_times"] else "Minutes from session start",
+                     block.get("focus_title", ""), block["topic_title"], block.get("resource_title", block["id"]),
+                     block["title"], block["minutes"], block["guidance"])
+            writer.writerow(["'" + str(c) if str(c).startswith(("=", "+", "-", "@")) else c for c in cells])
+    return output.getvalue().encode("utf-8-sig")
 
 def validate_progress(raw, by_id, resources):
     """Validate untrusted browser storage/backups; never execute imported content."""
@@ -373,18 +529,28 @@ def csv_plan(rows):
 
 
 def calendar_file(week, stamp):
-    """All-day calendar entries: no guessed class dates, times or time zones."""
+    """Study reminders match explicit clock times, or remain all-day when unset."""
     def escape(text):
         return str(text).replace("\\", "\\\\").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
 
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//EG1011//Study Navigator//EN", "CALSCALE:GREGORIAN"]
     for day in week["days"]:
         when = date.fromisoformat(day["date"])
-        description = "\n".join(f"{b['minutes']} min - {b['topic_title']}: {b['title']}. {b['guidance']}" for b in day["blocks"])
+        description = "\n".join(
+            (f"{b['start_label']}-{b['end_label']} " if "start_label" in b else "")
+            + f"({b['minutes']} min) {b['title']}. {b['guidance']}" for b in day["blocks"])
+        if day.get("start_time"):
+            clock = time.fromisoformat(day["start_time"])
+            begins = datetime.combine(when, clock, ZoneInfo("Australia/Brisbane")).astimezone(timezone.utc)
+            ends = begins + timedelta(minutes=day["minutes"])
+            timing = [f"DTSTART:{begins:%Y%m%dT%H%M%SZ}", f"DTEND:{ends:%Y%m%dT%H%M%SZ}"]
+        else:
+            timing = [f"DTSTART;VALUE=DATE:{when:%Y%m%d}", f"DTEND;VALUE=DATE:{when + timedelta(days=1):%Y%m%d}"]
+        focus_names = list(dict.fromkeys(b.get("focus_title", b["topic_title"]) for b in day["blocks"] if b.get("role") != "break"))
+        summary = "EG1011: " + "; ".join(focus_names) + " - " + str(day["minutes"]) + " min"
         lines.extend(["BEGIN:VEVENT", f"UID:eg1011-{when.isoformat()}-{stamp}@study-navigator",
-                      f"DTSTAMP:{stamp}", f"DTSTART;VALUE=DATE:{when:%Y%m%d}",
-                      f"DTEND;VALUE=DATE:{when + timedelta(days=1):%Y%m%d}",
-                      f"SUMMARY:{escape('EG1011 study - ' + str(day['minutes']) + ' min')}",
+                      f"DTSTAMP:{stamp}", *timing,
+                      f"SUMMARY:{escape(summary)}",
                       f"DESCRIPTION:{escape(description)}", "END:VEVENT"])
     lines.append("END:VCALENDAR")
     # RFC 5545 folds lines at 75 octets, without splitting UTF-8 code points.
