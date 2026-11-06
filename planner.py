@@ -140,6 +140,80 @@ def activity_key(topic_id, resource_id, role="practice"):
     return f"{topic_id}|{resource_id}|{role}"
 
 
+def progress_overview(progress, by_id, resources, today, focus_id=None):
+    """Summarise recorded evidence without treating completion as proficiency."""
+    due = dict(due_topics(progress, by_id, today))
+    counts = [0, 0, 0, 0]
+    rows, actions = [], []
+    completed = {t: set() for t in by_id}
+    recent = {today - timedelta(days=13-i): {"ratings": 0, "activities": 0, "checks": 0, "notes": 0}
+              for i in range(14)}
+
+    def record(when, category):
+        saved = date.fromisoformat(when)
+        if saved in recent:
+            recent[saved][category] += 1
+
+    for key, saved in progress["completed"].items():
+        tid, resource_id, _ = key.split("|")
+        if tid in completed:
+            completed[tid].add(resource_id)
+        record(saved["date"], "activities")
+    for rating in progress["ratings"].values():
+        record(rating["date"], "ratings")
+    for check in progress["checks"].values():
+        record(check["date"], "checks")
+    for note in progress["errors"]:
+        record(note["date"], "notes")
+
+    for tid, topic in by_id.items():
+        rating = progress["ratings"].get(tid, {})
+        value = level(progress, tid)
+        counts[value] += 1
+        check = progress["checks"].get(tid)
+        failed = bool(check and not check["correct"])
+        review_on = None
+        if value >= 2:
+            interval = 1 if value == 2 else (1, 3, 7, 14)[min(max(rating.get("reviews", 1)-1, 0), 3)]
+            review_on = (date.fromisoformat(rating["date"]) + timedelta(days=interval)).isoformat()
+        materials = [dict(id=rid, title=resources[rid]["title"], symbol=resources[rid]["symbol"],
+                          color=resources[rid]["color"], completed=rid in completed[tid])
+                     for rid in topic["activities"]]
+        row = {"id": tid, "title": topic["title"], "short_title": topic["short_title"],
+               "area": topic["area"], "session": topic["session"], "level": value,
+               "rated_on": rating.get("date"), "review_on": review_on, "due": tid in due,
+               "needs_attention": value == 1 or failed, "check": deepcopy(check),
+               "materials": materials, "source": deepcopy(topic["source"]),
+               "practice_prompt": topic["practice_prompt"], "outcomes": topic["outcomes"],
+               "notes_count": sum(n["topic_id"] == tid for n in progress["errors"])}
+        rows.append(row)
+        if failed:
+            priority, label, reason = 0, "Recheck this idea", "Your latest concept check needs another attempt."
+        elif value == 1:
+            priority, label, reason = 1, "Build this skill", "You marked this topic as needing practice."
+        elif tid in due:
+            priority, label, reason = 2, "Time for a revisit", "A spaced review is suggested from your last self-assessment."
+        else:
+            continue
+        actions.append({"id": tid, "title": topic["title"], "label": label, "reason": reason,
+                        "priority": priority, "date": (check or rating).get("date", today.isoformat())})
+    actions.sort(key=lambda item: (item["priority"], item["date"], item["id"]))
+    if not actions and rows:
+        focus = next((r for r in rows if r["id"] == focus_id), rows[0])
+        actions = [{"id": focus["id"], "title": focus["title"], "priority": 3,
+                    "label": "Start with one topic" if not sum(counts[1:]) else "Keep your skills fresh",
+                    "reason": "Try a fresh problem, then record what you can do with notes closed."}]
+    areas = [{"name": name, "counts": [sum(r["area"] == name and r["level"] == value for r in rows)
+                                        for value in range(4)]}
+             for name in ("Statics", "Dynamics", "Foundations")]
+    return {"topics": rows, "counts": counts, "total": len(rows), "rated": sum(counts[1:]),
+            "independent": counts[3], "attention": sum(r["needs_attention"] for r in rows),
+            "due_count": len(due), "activity_count": len(progress["completed"]),
+            "areas": areas, "actions": actions[:3], "today": today.isoformat(),
+            "recent": [{"date": day.isoformat(), "total": sum(saved.values()), **saved}
+                       for day, saved in recent.items()]}
+
+
 def resource_url(topic, activity):
     """Optional instructor-supplied URLs; never invent resource links."""
     url = topic.get("resource_urls", {}).get(activity["id"], "")
