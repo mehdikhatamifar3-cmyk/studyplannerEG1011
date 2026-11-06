@@ -16,7 +16,7 @@ from planner import (AREA_COLORS, CHALLENGES, GOALS, LEVELS, PROBLEM_ROUTES, act
                      validate_progress)
 
 BASE = Path(__file__).resolve().parent
-st.set_page_config(page_title="EG1011 · Study Navigator", page_icon="◉", layout="wide")
+st.set_page_config(page_title="EG1011 · Study Navigator", page_icon="◉", layout="wide", initial_sidebar_state="collapsed")
 
 
 @st.cache_data
@@ -45,17 +45,15 @@ h = lambda text: escape(str(text), quote=True)
 st.markdown("""
 <style>
 :root{--navy:#172f49;--ink:#243b51;--muted:#556b7e;--line:#dce5ee;--teal:#087f8c;--page:#f5f7fb}
-.stApp{background:var(--page);color:var(--ink)}.block-container{max-width:1420px;padding-top:4.5rem;padding-bottom:3rem}
+.stApp{background:var(--page);color:var(--ink)}.block-container{max-width:1560px;padding-top:4.4rem;padding-bottom:2rem}
 html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
 h1,h2,h3,h4{color:var(--navy);letter-spacing:-.025em}p{line-height:1.6}
 section[data-testid="stSidebar"]{background:white;border-right:1px solid var(--line)}section[data-testid="stSidebar"] .block-container{padding-top:1.6rem}
 [data-testid="stSidebar"] label{font-size:.86rem}[data-testid="stSidebar"] h3{font-size:1.15rem}
-.brand{display:flex;gap:11px;align-items:center;margin-bottom:22px}.brand-mark{border:2px solid #087f8c;border-radius:50%;width:32px;height:32px;position:relative}.brand-mark:after{content:'';position:absolute;border:2px solid #c16a31;border-radius:50%;width:22px;height:22px;left:12px;top:8px}.brand strong{display:block;color:#172f49;font-size:16px}.brand small{display:block;color:#62778a;font-size:10px;letter-spacing:.13em;text-transform:uppercase}
-.hero{background:#172f49;border-radius:22px;padding:28px 32px 24px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}.hero:before,.hero:after{content:'';position:absolute;border-radius:50%;pointer-events:none}.hero:before{width:240px;height:240px;right:-25px;top:-75px;border:35px solid #ffffff08}.hero:after{width:190px;height:190px;right:95px;top:-50px;border:2px solid #ffffff15}.eyebrow{font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.14em;color:#96cbd0}.hero h1{font-size:clamp(1.65rem,3vw,2.25rem);font-weight:750;color:white;margin:5px 0 8px;padding:0;max-width:850px}.hero p{color:#d4e2ee;font-size:.9rem;margin:0;max-width:770px}.hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.hero-tag{background:#ffffff0e;border:1px solid #ffffff20;border-radius:30px;padding:5px 11px;font-size:11px;color:#e5eff7}
+.brand{display:flex;gap:13px;align-items:center;margin:0 0 3px}.brand h1{display:block;font-size:24px!important;letter-spacing:-.03em;margin:0;padding:0;line-height:1.2}.brand small{font-size:10px!important}.compact-meta{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.compact-meta span{font-size:11px;border:1px solid #d7e3ec;border-radius:20px;padding:6px 12px;color:#496578;background:white}.topic-line{margin:0 0 3px}.orbit-summary{font-size:12px;color:#587087;text-align:right;margin:3px 0}.topic-line .focus-title{font-size:1.4rem;margin:0;padding:0}.topic-line .kicker{margin:0 0 3px}.brand-mark{border:2px solid #087f8c;border-radius:50%;width:32px;height:32px;position:relative}.brand-mark:after{content:'';position:absolute;border:2px solid #c16a31;border-radius:50%;width:22px;height:22px;left:12px;top:8px}.brand strong{display:block;color:#172f49}.brand small{display:block;color:#62778a;font-size:10px;letter-spacing:.13em;text-transform:uppercase}
 .kicker{font-size:10px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:#58748a;margin:4px 0 5px}.focus-title{font-size:1.5rem;font-weight:750;line-height:1.3;color:#172f49;margin:0 0 7px}.focus-copy{font-size:.9rem;color:#556b7e;margin:0 0 8px;max-width:950px}.pill{display:inline-block;font-size:10px;font-weight:650;border-radius:20px;padding:5px 10px;background:#e8eef4;margin:2px 6px 2px 0;color:#36556f}.source{color:#62778b;font-size:11px;margin:9px 0 20px}
-.next{background:#edf5f3;border:1px solid #cde3db;border-radius:17px;padding:18px 20px;margin-bottom:13px}.next .kicker{color:#34745f}.next h3{font-size:1.1rem;margin:3px 0 8px;padding:0}.next p{font-size:.84rem;line-height:1.55;margin:0;color:#375b50}.time{display:inline-block;margin:0 0 8px;font-size:11px;font-weight:750;color:#24694e}.hint-card{border:1px solid #e7d6ba;background:#fff9ee;border-radius:15px;padding:14px 17px;margin:10px 0 14px;font-size:.82rem;line-height:1.55;color:#71552e}.hint-card strong{color:#694a1c}
 .material{border-left:4px solid var(--resource-color);padding:2px 0 2px 14px;margin:10px 0 14px}.material h4{font-size:1.03rem;margin:0 0 6px;padding:0}.material p{font-size:.84rem;color:#496277;margin:0;line-height:1.6}.material .kicker{color:var(--resource-color)}
-.step{display:flex;gap:12px;align-items:flex-start;padding:13px 0 11px;border-bottom:1px solid #e4ebf1}.step-number{background:var(--c);color:white;flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:750}.step-title{font-size:.88rem;font-weight:700;color:#1f3a51}.step-meta{color:#5b7082;font-size:11px;margin:2px 0 4px}.step-reason{font-size:.8rem;color:#546b7f;line-height:1.45}.step-done{opacity:.6}.mini-stat{border:1px solid #dce5ee;background:white;border-radius:14px;padding:14px 17px;margin:3px 0 15px}.mini-stat b{font-size:1.5rem;color:#172f49;display:block}.mini-stat span{font-size:11px;color:#607487}.bridge{color:#3d5d77;font-size:.82rem;line-height:1.6}.footer{border-top:1px solid #dce5ee;padding-top:16px;margin-top:28px;color:#60768a;font-size:11px;line-height:1.6}
+.step{display:flex;gap:12px;align-items:flex-start;padding:13px 0 11px;border-bottom:1px solid #e4ebf1}.step-number{background:var(--c);color:white;flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:750}.step-title{font-size:.88rem;font-weight:700;color:#1f3a51}.step-meta{color:#5b7082;font-size:11px;margin:2px 0 4px}.step-reason{font-size:.8rem;color:#546b7f;line-height:1.45}.step-done{opacity:.6}.mini-stat{border:1px solid #dce5ee;background:white;border-radius:14px;padding:14px 17px;margin:3px 0 15px}.mini-stat b{font-size:1.5rem;color:#172f49;display:block}.mini-stat span{font-size:11px;color:#607487}.bridge{color:#3d5d77;font-size:.82rem;line-height:1.6}.footer{border-top:1px solid #dce5ee;padding-top:10px;margin-top:16px;color:#60768a;font-size:11px;line-height:1.6}
 [data-testid="stVerticalBlockBorderWrapper"]>div{border-radius:17px!important}.stButton button,.stDownloadButton button,.stLinkButton a{border-radius:10px;font-weight:600}.stButton button[kind="primary"]{background:#087f8c;border-color:#087f8c;color:white}.stButton button[kind="primary"]:hover{background:#066c77;border-color:#066c77}
 div[data-baseweb="select"]>div{border-radius:10px}[data-testid="stMetricValue"]{font-size:1.5rem}button:focus-visible{outline:3px solid #357cb6!important;outline-offset:2px}
 @media(max-width:800px){.block-container{padding-top:4.25rem;padding-left:1rem;padding-right:1rem}.hero{padding:22px 20px;border-radius:16px}.hero h1{max-width:95%;font-size:1.65rem}.hero-tags{gap:5px}.hero-tag{font-size:10px}.focus-title{font-size:1.3rem}}
@@ -119,6 +117,32 @@ def handle_event(event):
     elif kind == "resource" and event.get("id") in resources:
         queue_resource(event["id"])
         st.rerun()
+    elif kind == "view" and event.get("id") in ("My pathway", "Topic connections", "Weekly studio", "My progress"):
+        ss.pending_view = event["id"]
+        st.rerun()
+    elif kind == "complete_activity":
+        key = event.get("key", "")
+        if not isinstance(key, str) or type(event.get("completed")) is not bool:
+            return
+        block = next((b for b in plan if b["key"] == key), None)
+        parts = key.split("|")
+        if block is None:
+            if (len(parts) != 3 or parts[0] != ss.focus or parts[1] not in by_topic[ss.focus]["activities"]
+                    or parts[2] != "practice"):
+                return
+            block = resources[parts[1]]
+        if event["completed"]:
+            ss.progress["completed"][key] = {"date": today.isoformat(), "minutes": block["minutes"]}
+        else:
+            ss.progress["completed"].pop(key, None)
+        ss.epoch += 1
+        st.rerun()
+    elif kind == "concept_check" and event.get("topic_id") == ss.focus:
+        answer = event.get("answer")
+        check = by_topic[ss.focus]["check"]
+        if type(answer) is int and answer in range(len(check["options"])):
+            ss.progress["checks"][ss.focus] = {"answer": answer, "correct": answer == check["answer"], "date": today.isoformat()}
+            st.rerun()
     elif kind == "restore" and not ss.storage_ready:
         try:
             if event.get("data") is not None:
@@ -166,23 +190,36 @@ def mini_stat(column, number, text):
         st.markdown(f'<div class="mini-stat"><b>{h(number)}</b><span>{h(text)}</span></div>', unsafe_allow_html=True)
 
 
-with st.sidebar:
-    st.markdown('<div class="brand"><div class="brand-mark"></div><div><strong>Study Navigator</strong><small>EG1011 · Learning studio</small></div></div>', unsafe_allow_html=True)
-    st.radio("Subject area", ["Statics", "Dynamics", "Foundations"], key="area_picker", on_change=change_area, horizontal=True)
-    choices = [t["id"] for t in topics if t["area"] == ss.area_picker]
-    st.selectbox("What are you working on?", choices, key="topic_picker", format_func=lambda t: by_topic[t]["title"], on_change=change_topic)
-    st.selectbox("My goal", GOALS, key="goal")
-    st.radio("Confidence for this session", ["Low", "Medium", "High"], index=1, horizontal=True, key="confidence")
-    st.select_slider("Time for this session", options=[15, 30, 45, 60, 90, 120], value=60, format_func=lambda v: f"{v} min", key="minutes")
-    st.selectbox("Where do you get stuck?", CHALLENGES, key="challenge")
-    st.caption("The plan changes with your goal, time, topic ratings and the step you find difficult.")
-    st.divider()
-    st.caption("FIRST VISIT? Mark familiar topics in My progress to personalise the prerequisite review.")
+brand_col, settings_col, finder_col = st.columns([3.8, 1.2, 1.2], gap="medium", vertical_alignment="center")
+with brand_col:
+    st.markdown('<div class="brand"><div class="brand-mark"></div><div><h1>Study Navigator</h1><small>EG1011 · Statics & Dynamics</small></div></div>', unsafe_allow_html=True)
     storage_event = learning_map(mode="storage", payload=ss.progress, restore=not ss.storage_ready,
                                  boot=ss.boot, key="browser_progress", default=None)
     handle_event(storage_event)
-    if ss.storage_failed:
-        st.caption("Browser saving is unavailable. Download a progress backup before leaving.")
+with settings_col:
+    with st.popover("Study settings", use_container_width=True):
+        st.markdown("#### Make the plan yours")
+        st.radio("Subject area", ["Statics", "Dynamics", "Foundations"], key="area_picker", on_change=change_area, horizontal=True)
+        choices = [t["id"] for t in topics if t["area"] == ss.area_picker]
+        st.selectbox("What are you working on?", choices, key="topic_picker", format_func=lambda t: by_topic[t]["title"], on_change=change_topic)
+        st.selectbox("My goal", GOALS, key="goal")
+        st.radio("Confidence for this session", ["Low", "Medium", "High"], index=1, horizontal=True, key="confidence")
+        st.select_slider("Time for this session", options=[15, 30, 45, 60, 90, 120], value=60, format_func=lambda v: f"{v} min", key="minutes")
+        st.selectbox("Where do you get stuck?", CHALLENGES, key="challenge")
+        st.caption("Settings update the pathway. Mark familiar topics in My progress to personalise the prerequisite review.")
+with finder_col:
+    with st.popover("Find a topic", use_container_width=True):
+        st.markdown("#### Start from your problem")
+        clue = st.selectbox("What does the question ask you to do?", list(PROBLEM_ROUTES), index=None,
+                            placeholder="Choose a problem clue…")
+        if clue:
+            route_ids, explanation = PROBLEM_ROUTES[clue]
+            st.caption(explanation)
+            for tid in route_ids:
+                st.button("Explore " + by_topic[tid]["short_title"], key="find_"+tid,
+                          on_click=queue_topic, args=(tid, "My pathway"), use_container_width=True)
+if ss.storage_failed:
+    st.caption("Browser saving is unavailable. Download a progress backup in My progress.")
 
 p = ss.progress
 topic = by_topic[ss.focus]
@@ -192,33 +229,16 @@ missing = result["gaps"]
 ready_count = sum(level(p, t["id"]) >= 2 for t in topics)
 independent_count = sum(level(p, t["id"]) == 3 for t in topics)
 
-st.markdown(f"""
-<div class="hero"><div class="eyebrow">First-year engineering · Statics & Dynamics</div>
-<h1>See the connections.<br>Find your next step.</h1>
-<p>Build from what you know, practise what you need, and make a study plan you can actually follow.</p>
-<div class="hero-tags"><span class="hero-tag">{h(topic['area'])}{' · Session '+str(topic['session']) if topic['session'] else ' · Previous knowledge'}</span>
-<span class="hero-tag">{result['minutes']} / {ss.minutes} min planned</span>
-<span class="hero-tag">{len(missing)} building block{'s' if len(missing)!=1 else ''} to check</span>
-<span class="hero-tag">{independent_count} / {len(topics)} topics independent</span></div></div>
-""", unsafe_allow_html=True)
 if ss.get("storage_notice"):
     st.info(ss.storage_notice)
 
 view = st.radio("Explore your learning", ["My pathway", "Topic connections", "Weekly studio", "My progress"], horizontal=True, label_visibility="collapsed", key="view")
-with st.expander("Not sure which topic you need? Start from your problem"):
-    clue = st.selectbox("What does the question ask you to do?", list(PROBLEM_ROUTES), index=None,
-                        placeholder="Choose a problem clue…")
-    if clue:
-        route_ids, explanation = PROBLEM_ROUTES[clue]
-        st.caption(explanation)
-        route_cols = st.columns(len(route_ids))
-        for col, tid in zip(route_cols, route_ids):
-            with col:
-                st.button("Explore " + by_topic[tid]["short_title"], key="find_"+tid,
-                          on_click=queue_topic, args=(tid, "My pathway"), use_container_width=True)
-st.markdown(f'<div class="kicker">{h(topic["area"])} · {"Session "+str(topic["session"]) if topic["session"] else "Foundations"}</div><div class="focus-title">{h(topic["title"])}</div><p class="focus-copy">{h(topic["description"])}</p>', unsafe_allow_html=True)
-st.markdown(''.join(f'<span class="pill">{h(x)}</span>' for x in topic['outcomes']), unsafe_allow_html=True)
-st.markdown(f'<div class="source">Lecture-note locator: {h(source_text(topic))} · Open your materials on the EG1011 course site.</div>', unsafe_allow_html=True)
+title_col, summary_col = st.columns([3.4, 1.6], vertical_alignment="center")
+with title_col:
+    st.markdown(f'<div class="topic-line"><div class="kicker">{h(topic["area"])} · {"Session "+str(topic["session"]) if topic["session"] else "Foundations"}</div><h2 class="focus-title">{h(topic["title"])}</h2></div>', unsafe_allow_html=True)
+with summary_col:
+    done_count = sum(b["key"] in p["completed"] for b in plan)
+    st.markdown(f'<div class="compact-meta"><span>{result["minutes"]} min</span><span>{done_count} / {len(plan)} steps done</span></div>', unsafe_allow_html=True)
 
 
 def rate_current_topic():
@@ -230,9 +250,9 @@ def rate_current_topic():
             st.rerun()
 
 
-def concept_check():
+def concept_check(wrap=True):
     check = topic["check"]
-    with st.expander("Try a short concept check", expanded=False):
+    with (st.expander("Try a short concept check", expanded=False) if wrap else st.container()):
         st.caption("This checks one idea; a correct answer alone does not establish independent problem-solving.")
         with st.form(f"check_{topic['id']}"):
             answer = st.radio(check["question"], range(len(check["options"])), index=None,
@@ -255,59 +275,60 @@ def concept_check():
 
 
 if view == "My pathway":
-    left, right = st.columns([1.7, 1], gap="large")
-    with left:
-        st.markdown("#### Your learning orbit")
-        main_blocks = [dict(b, step=i) for i, b in enumerate(plan, 1)
-                       if b["topic_id"] == topic["id"] and b["role"] == "practice"]
-        active_resource = ss.resource_picker if ss.resource_picker in topic["activities"] else "LN"
-        event = learning_map(mode="resources", payload={"topic": topic, "resources": [resources[i] for i in topic["activities"]],
-                             "plan": main_blocks, "selected_resource": active_resource,
-                             "completed": [a for a in topic["activities"] if activity_key(topic["id"], a) in p["completed"]]},
-                             key="resource_orbit", default=None)
-        handle_event(event)
-        # Native equivalent remains usable on small screens and with assistive technology.
+    # The full-width orbit is the workspace. Resource/topic clicks reveal their
+    # own panels inside the component, without moving or reloading the page.
+    main_blocks = [dict(b, step=i) for i, b in enumerate(plan, 1)
+                   if b["topic_id"] == topic["id"] and b["role"] == "practice"]
+    first = next((dict(b, step=i) for i, b in enumerate(plan, 1) if b["key"] not in p["completed"]), None)
+    active_resource = ss.resource_picker if ss.resource_picker in topic["activities"] else "LN"
+    event = learning_map(mode="resources", payload={
+        "topic": topic, "resources": [dict(resources[i], url=resource_url(topic, resources[i])) for i in topic["activities"]],
+        "plan": main_blocks, "selected_resource": active_resource,
+        "completed": [a for a in topic["activities"] if activity_key(topic["id"], a) in p["completed"]],
+        "next": first, "source": source_text(topic), "check_result": p["checks"].get(topic["id"]),
+        "gaps": [dict(by_topic[t], level=level(p, t)) for t in missing],
+        "rating": level(p, topic["id"]), "repair_title": by_topic[topic["check"]["repair_topic"]]["short_title"],
+    }, key="resource_orbit", default=None)
+    handle_event(event)
+
+    # These native equivalents keep the workflow accessible and available when
+    # students prefer controls to an interactive diagram. All start collapsed.
+    with st.expander(f"Today's pathway · {len(plan)} steps · checklist & download"):
+        st.progress(done_count / len(plan), text=f"{done_count} of {len(plan)} activities completed")
+        for order, block in enumerate(plan, 1):
+            status = " step-done" if block["key"] in p["completed"] else ""
+            st.markdown(f'<div class="step{status}"><span class="step-number" style="--c:{block["color"]}">{order}</span><div><div class="step-title">{h(block["title"])}</div><div class="step-meta">{block["minutes"]} min · {h(block["topic_title"])}</div><div class="step-reason">{h(block["reason"])}</div></div></div>', unsafe_allow_html=True)
+            completion_checkbox(block, f"Complete step {order}")
+        st.download_button("Download this pathway · CSV", csv_plan([(i, b) for i, b in enumerate(plan, 1)]), file_name=f"EG1011_{topic['id']}_pathway.csv", mime="text/csv", use_container_width=True)
+        if done_count:
+            st.button("Start a fresh attempt", key="repeat_pathway", on_click=repeat_pathway,
+                      args=([b["key"] for b in plan],), use_container_width=True)
+    with st.expander("Topic notes · learning tips & concept check"):
+        st.write(topic["description"])
+        st.markdown(''.join(f'<span class="pill">{h(x)}</span>' for x in topic['outcomes']), unsafe_allow_html=True)
+        st.caption("Lecture-note locator: " + source_text(topic))
+        st.info(topic["practice_prompt"])
+        st.caption("A mistake to watch for: " + topic["common_mistake"])
+        concept_check(wrap=False)
+        rate_current_topic()
+    with st.expander(f"Materials & building blocks · {len(missing)} to check"):
         if ss.resource_picker not in topic["activities"]:
             ss.resource_picker = "LN"
         material_id = st.selectbox("Explore a material", topic["activities"], format_func=lambda r: resources[r]["title"], key="resource_picker")
         item = resources[material_id]
         st.markdown(f'<div class="material" style="--resource-color:{item["color"]}"><div class="kicker">{h(item["phase"])} · {h(item["type"])}</div><h4>{h(item["title"])}</h4><p>{h(item["guidance"])}</p></div>', unsafe_allow_html=True)
-        if material_id == "LN":
-            st.info(topic["practice_prompt"])
         link = resource_url(topic, item)
         if link:
             st.link_button("Open this material", link, use_container_width=True)
         else:
-            st.caption("Find the matching topic material on the EG1011 course site. The circles show how to use it.")
-        st.markdown(f'<div class="hint-card"><strong>A mistake to watch for</strong><br>{h(topic["common_mistake"])}</div>', unsafe_allow_html=True)
-        concept_check()
-    with right:
-        first = next((b for b in plan if b["key"] not in p["completed"]), None)
-        if first:
-            st.markdown(f'<div class="next"><div class="kicker">Your next useful action</div><h3>{h(first["title"])}</h3><div class="time">{first["minutes"]} focused minutes</div><p>{h(first["reason"])}</p></div>', unsafe_allow_html=True)
-            if first["topic_id"] != topic["id"]:
-                st.button("Explore this building block", on_click=queue_topic, args=(first["topic_id"],), use_container_width=True)
-        else:
-            st.success("This pathway is complete. Try a fresh problem, reflect, and update your topic rating below.")
+            st.caption("Find the matching topic material on the EG1011 course site.")
         if missing:
-            unknown = sum(level(p, t) == 0 for t in missing)
-            st.markdown(f'<div class="hint-card"><strong>{len(missing)} building blocks to check</strong><br>{unknown} are not yet checked. Today reviews one gap; a short review does not clear the others. Mark familiar topics in My progress.</div>', unsafe_allow_html=True)
+            st.caption("Unchecked knowledge is not a failed topic. Today reviews one gap; other building blocks may still need checking.")
+            target = next_gap(topic["id"], by_topic, p)
+            st.button("Practise " + by_topic[target]["short_title"], on_click=queue_topic, args=(target, "My pathway"), use_container_width=True)
         else:
-            st.caption("Your prerequisite ratings suggest you can begin. Revisit a building block whenever a problem exposes a gap.")
-        done = sum(b["key"] in p["completed"] for b in plan)
-        st.progress(done / len(plan), text=f"{done} of {len(plan)} activities completed")
-        for order, block in enumerate(plan, 1):
-            status = " step-done" if block["key"] in p["completed"] else ""
-            st.markdown(f'<div class="step{status}"><span class="step-number" style="--c:{block["color"]}">{order}</span><div><div class="step-title">{h(block["title"])}</div><div class="step-meta">{block["minutes"]} min · {h(block["topic_title"])}</div><div class="step-reason">{h(block["reason"])}</div></div></div>', unsafe_allow_html=True)
-            completion_checkbox(block, f"Complete step {order}")
-        if result["unused"]:
-            st.caption(f"{result['unused']} min spare: explain a method aloud or record an error to revisit.")
-        st.download_button("Download this pathway · CSV", csv_plan([(i, b) for i, b in enumerate(plan, 1)]), file_name=f"EG1011_{topic['id']}_pathway.csv", mime="text/csv", use_container_width=True)
-        if done:
-            st.button("Start a fresh attempt", key="repeat_pathway", on_click=repeat_pathway,
-                      args=([b["key"] for b in plan],), use_container_width=True)
-        with st.expander("Reflect and update my topic rating"):
-            rate_current_topic()
+            st.caption("Your prerequisite ratings suggest you can begin. Revisit a building block if a problem exposes a gap.")
+        st.button("Explore the learning chain", on_click=lambda: ss.update(pending_view="Topic connections"), use_container_width=True)
 
 elif view == "Topic connections":
     controls, details = st.columns([2.2, 1])
@@ -458,4 +479,4 @@ elif view == "My progress":
             for t in rated:
                 st.caption(t["title"] + " · " + LEVELS[level(p, t["id"])])
 
-st.markdown('<div class="footer">EG1011 · Study Navigator · Learn → attempt → check → revisit.<br>Study suggestions support your course materials. Your official timetable, assessment instructions and lecturer advice take priority.</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">EG1011 · Learn → attempt → check → revisit.</div>', unsafe_allow_html=True)
