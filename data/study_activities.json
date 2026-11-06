@@ -1,9 +1,90 @@
 [
-{"id":"QG","title":"QuickGuide","type":"QuickGuide","importance":5,"minutes":8,"difficulty":"Foundation","sequence":1,"guidance":"Find the QuickGuide on the EG1011 website. Review the key concepts, formulas, diagrams, and decision rules."},
-{"id":"LN","title":"Selected lecture-note sections","type":"Lecture notes","importance":5,"minutes":15,"difficulty":"Developing","sequence":2,"guidance":"Open the lecture notes on the EG1011 website. Study only the sections connected to the current outcomes and annotate one worked example."},
-{"id":"SBS","title":"Step by Step with Mehdi","type":"Step by Step with Mehdi","importance":4,"minutes":15,"difficulty":"Foundation","sequence":3,"guidance":"Use the relevant Step by Step with Mehdi PDF. Pause at each decision and predict the next step before reading it."},
-{"id":"APP","title":"Interactive exercise app","type":"Interactive app","importance":4,"minutes":12,"difficulty":"Developing","sequence":4,"guidance":"Open the matching interactive exercise from the subject website. Use feedback to identify misconceptions before independent practice."},
-{"id":"T","title":"T-type tutorial questions","type":"T questions","importance":5,"minutes":20,"difficulty":"Standard","sequence":5,"guidance":"Attempt the relevant T question and explain why each equation or method is appropriate. Use tutorial support where needed."},
-{"id":"H","title":"H-type independent questions","type":"H questions","importance":4,"minutes":20,"difficulty":"Standard","sequence":6,"guidance":"Attempt the relevant H question independently before checking any worked solution or video."},
-{"id":"EXIT","title":"Exit check","type":"Exit check","importance":4,"minutes":10,"difficulty":"Standard","sequence":7,"guidance":"Test whether you can select the method and complete the main steps without prompts. Target at least 4 out of 5."}
+  {
+    "id": "LN",
+    "title": "Important lecture-note examples",
+    "type": "Lecture examples",
+    "importance": 5,
+    "minutes": 20,
+    "minimum_minutes": 15,
+    "difficulty": "Developing",
+    "sequence": 1,
+    "guidance": "Start with the important worked examples in the lecture notes. Cover the shown solution, re-solve each example yourself, and explain why each equation and step is used."
+  },
+  {
+    "id": "T",
+    "title": "T-type tutorial questions",
+    "type": "T questions",
+    "importance": 5,
+    "minutes": 25,
+    "minimum_minutes": 20,
+    "difficulty": "Standard",
+    "sequence": 2,
+    "guidance": "Attempt the relevant T-type questions after the lecture examples. Use tutorial guidance where needed, but write and justify each step yourself."
+  },
+  {
+    "id": "H",
+    "title": "H-type independent questions",
+    "type": "H questions",
+    "importance": 5,
+    "minutes": 25,
+    "minimum_minutes": 20,
+    "difficulty": "Standard",
+    "sequence": 3,
+    "guidance": "Attempt the relevant H-type questions independently. Do not open a worked solution or support video until you have made a serious attempt and identified the exact step causing difficulty."
+  },
+  {
+    "id": "SBS",
+    "title": "Step by Step with Mehdi",
+    "type": "Step by Step with Mehdi",
+    "importance": 3,
+    "minutes": 15,
+    "minimum_minutes": 10,
+    "difficulty": "Foundation",
+    "sequence": 4,
+    "guidance": "Use the relevant Step by Step with Mehdi PDF when a method or transition is unclear. Pause at each decision, predict the next step, then return to the lecture, T-type, or H-type problem."
+  },
+  {
+    "id": "APP",
+    "title": "Interactive exercise app",
+    "type": "Interactive app",
+    "importance": 3,
+    "minutes": 12,
+    "minimum_minutes": 10,
+    "difficulty": "Developing",
+    "sequence": 5,
+    "guidance": "Use the matching interactive exercise to check a concept, equation choice, sign convention, or common misconception. Then return to solving the main problem independently."
+  },
+  {
+    "id": "SIA",
+    "title": "Solutions in Action with Mehdi",
+    "type": "Solutions in Action with Mehdi",
+    "importance": 3,
+    "minutes": 15,
+    "minimum_minutes": 10,
+    "difficulty": "Developing",
+    "sequence": 6,
+    "guidance": "Use the relevant Solutions in Action with Mehdi video after attempting the problem. Pause before each major step, compare the demonstrated reasoning with your own approach, and note the specific correction needed."
+  },
+  {
+    "id": "QG",
+    "title": "QuickGuide",
+    "type": "QuickGuide",
+    "importance": 3,
+    "minutes": 8,
+    "minimum_minutes": 5,
+    "difficulty": "Foundation",
+    "sequence": 7,
+    "guidance": "Use the QuickGuide for a concise overview of key concepts, formulas, diagrams, and decision rules. It supports preparation and review but does not replace solving examples and questions."
+  },
+  {
+    "id": "EXIT",
+    "title": "Exit check",
+    "type": "Exit check",
+    "importance": 4,
+    "minutes": 10,
+    "minimum_minutes": 8,
+    "difficulty": "Standard",
+    "sequence": 8,
+    "guidance": "Check whether you can select the correct method and complete the main steps without prompts. Revisit the relevant core problem if an essential step is still unclear."
+  }
 ]
