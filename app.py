@@ -1,5 +1,5 @@
 """EG1011 Study Navigator — run with: streamlit run app.py."""
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from html import escape
 import json
 from pathlib import Path
@@ -13,7 +13,7 @@ from planner import (AREA_COLORS, CHALLENGES, GOALS, LEVELS, PROBLEM_ROUTES, act
                      blank_progress, build_session, build_week, calendar_file,
                      csv_plan, due_topics, gaps, level, next_gap, prerequisite_order,
                      progress_json, rate_topic, resource_url, validate_catalog,
-                     validate_progress)
+                     validate_progress, weekly_csv)
 
 BASE = Path(__file__).resolve().parent
 st.set_page_config(page_title="EG1011 · Study Navigator", page_icon="◉", layout="wide", initial_sidebar_state="collapsed")
@@ -242,12 +242,13 @@ if ss.get("storage_notice"):
     st.info(ss.storage_notice)
 
 view = st.radio("Explore your learning", ["My pathway", "Topic connections", "Weekly studio", "My progress"], horizontal=True, label_visibility="collapsed", key="view")
-title_col, summary_col = st.columns([3.4, 1.6], vertical_alignment="center")
-with title_col:
-    st.markdown(f'<div class="topic-line"><div class="kicker">{h(topic["area"])} · {"Session "+str(topic["session"]) if topic["session"] else "Foundations"}</div><h2 class="focus-title">{h(topic["title"])}</h2></div>', unsafe_allow_html=True)
-with summary_col:
-    done_count = sum(b["key"] in p["completed"] for b in plan)
-    st.markdown(f'<div class="compact-meta"><span>{result["minutes"]} min</span><span>{done_count} / {len(plan)} steps done</span></div>', unsafe_allow_html=True)
+if view != "Weekly studio":
+    title_col, summary_col = st.columns([3.4, 1.6], vertical_alignment="center")
+    with title_col:
+        st.markdown(f'<div class="topic-line"><div class="kicker">{h(topic["area"])} · {"Session "+str(topic["session"]) if topic["session"] else "Foundations"}</div><h2 class="focus-title">{h(topic["title"])}</h2></div>', unsafe_allow_html=True)
+    with summary_col:
+        done_count = sum(b["key"] in p["completed"] for b in plan)
+        st.markdown(f'<div class="compact-meta"><span>{result["minutes"]} min</span><span>{done_count} / {len(plan)} steps done</span></div>', unsafe_allow_html=True)
 
 
 def rate_current_topic():
@@ -388,41 +389,80 @@ elif view == "Topic connections":
         rate_current_topic()
 
 elif view == "Weekly studio":
-    st.markdown("#### Give your practice a place in the week")
-    st.caption("Choose focus topics and study days. The planner adds unchecked prerequisites in learning order, then fits activities inside your time budget.")
+    st.markdown("### Build your study week")
+    st.caption("Choose what to practise, the dates you can study and your available minutes. Every focused session includes a topic you selected.")
     if "week_targets" not in ss:
         ss.week_targets = [topic["id"]]
-    targets = st.multiselect("This week’s focus topics", list(by_topic), key="week_targets", format_func=lambda t: f"{by_topic[t]['area']} · {by_topic[t]['title']}", max_selections=4)
-    c1, c2, c3 = st.columns([1, 1.7, 1])
-    with c1:
-        start = st.date_input("Seven days starting", value=today)
-    with c2:
-        names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        days = st.multiselect("Days I can study", names, default=["Mon", "Wed", "Fri", "Sun"])
-    with c3:
-        daily = st.select_slider("Minutes per study day", options=[15,30,45,60,90,120,180], value=60, format_func=lambda v: f"{v} min")
-    week = build_week(targets, by_topic, resources, p, start, [names.index(d) for d in days], daily, ss.goal)
-    if not targets or not days:
-        st.info("Choose at least one focus topic and one study day to build your week.")
+    targets = st.multiselect("1 · Topics to practise", list(by_topic), key="week_targets",
+                            format_func=lambda t: f"{by_topic[t]['area']} · {by_topic[t]['title']}",
+                            max_selections=4, help="Choose one or two topics for deeper practice, or more for short focused visits.")
+    date_col, days_col, time_col = st.columns([1, 1.9, 1.15])
+    with date_col:
+        start = st.date_input("2 · Plan from", value=today, key="week_start")
+    if start is None:
+        st.info("Choose the first date for your study week.")
+        st.stop()
+    date_options = [start + timedelta(days=i) for i in range(7)]
+    if "week_dates" not in ss:
+        ss.week_dates = [d for d in date_options if d.weekday() in (0, 2, 4, 6)]
+    elif ss.get("week_window") != start.isoformat():
+        ss.week_dates = [d for d in ss.week_dates if d in date_options] or [start]
+    ss.week_window = start.isoformat()
+    with days_col:
+        selected_dates = st.multiselect("Study dates", date_options, key="week_dates",
+                                      format_func=lambda d: f"{d:%a} {d.day} {d:%b}",
+                                      help="Select one date for a single session, or several dates for a weekly plan.")
+    with time_col:
+        daily = st.number_input("3 · Minutes per selected day", min_value=15, max_value=180,
+                                value=60, step=5, key="week_daily_minutes", disabled=ss.get("week_varied", False))
+    st.caption("Your plan updates below as you change these choices.")
+    with st.expander("Adjust daily times and study approach"):
+        if "week_goal" not in ss:
+            ss.week_goal = ss.goal
+        goal_col, clock_col = st.columns(2)
+        with goal_col:
+            week_goal = st.selectbox("Learning aim for this plan", GOALS, key="week_goal")
+        with clock_col:
+            start_clock = st.time_input("Optional start time · Queensland", value=None, key="week_clock",
+                                       help="Leave empty for elapsed minutes. Set a time to show actual clock times on every selected day.")
+        varied = st.checkbox("Set different minutes for different days", key="week_varied")
+        daily_budgets = {d.weekday(): int(daily) for d in selected_dates}
+        if varied:
+            st.caption("The daily minutes below replace the shared time setting above.")
+            day_columns = st.columns(2)
+            for index, d in enumerate(sorted(selected_dates)):
+                with day_columns[index % 2]:
+                    value = st.number_input(f"{d:%A} {d.day} {d:%b} · available minutes", min_value=15, max_value=180,
+                                            value=int(daily), step=5, key="week_minutes_"+d.isoformat())
+                    daily_budgets[d.weekday()] = int(value)
+        st.caption("A small warm-up reconnects relevant earlier knowledge. Most of the time stays on your chosen topic. Longer days include short breaks within your budget.")
+    week = build_week(targets, by_topic, resources, p, start, [d.weekday() for d in selected_dates],
+                      daily_budgets, week_goal, start_time=start_clock)
+    if not targets or not selected_dates:
+        st.info("Choose at least one topic and one study date to see exactly what to study.")
     else:
         s1, s2, s3 = st.columns(3)
-        mini_stat(s1, f"{week['minutes']} / {week['capacity']}", "minutes planned / available")
-        mini_stat(s2, len(week["route"]), "topics in your learning route, including prerequisites")
-        mini_stat(s3, len({b["topic_id"] for b in week["backlog"]}), "topics with activities still to schedule")
+        mini_stat(s1, f"{week['minutes']} / {week['capacity']} min", f"planned / available · {len(week['days'])} study day(s)")
+        mini_stat(s2, f"{len(week['scheduled_topics'])} / {len(week['route'])}", "chosen topics scheduled")
+        detail = f"on chosen topics · {week['warmup_minutes']} min warm-up"
+        if week["break_minutes"]:
+            detail += f" · {week['break_minutes']} min breaks"
+        mini_stat(s3, f"{week['focus_minutes']} min", detail)
+        if week["unscheduled"]:
+            names = "; ".join(t["topic_title"] for t in week["unscheduled"])
+            st.info(f"Your time fits {len(week['scheduled_topics'])} of {len(week['route'])} chosen topics. Add time or another date for: {names}.")
+        elif any(session["short_session"] for day in week["days"] for session in day["sessions"]):
+            st.caption("Short focused visits start the topic. Add another day if you need more time for independent problems.")
+        if week["route"] != targets:
+            st.caption("Chosen topics that depend on one another are placed in learning order.")
         handle_event(learning_map(mode="week", payload=dict(week, materials=activities), key="weekly_timeline", default=None))
-        if week["backlog"]:
-            st.info(f"Your available time leaves {len(week['backlog'])} activities for a later week. Add time, narrow the focus, or mark topics you can already solve in My progress.")
-            with st.expander("See what carries into the next week"):
-                for tid in dict.fromkeys(b["topic_id"] for b in week["backlog"]):
-                    minutes_left = sum(b["minutes"] for b in week["backlog"] if b["topic_id"] == tid)
-                    st.write(f"{by_topic[tid]['title']} · {minutes_left} min still to schedule")
         x, y = st.columns(2)
         with x:
-            st.download_button("Download weekly plan · CSV", csv_plan([(day["date"], block) for day in week["days"] for block in day["blocks"]]), file_name="EG1011_weekly_plan.csv", mime="text/csv", use_container_width=True)
+            st.download_button("Download my timed plan · CSV", weekly_csv(week), file_name="EG1011_weekly_plan.csv", mime="text/csv", use_container_width=True)
         with y:
             stamp = datetime.now(ZoneInfo("UTC")).strftime("%Y%m%dT%H%M%SZ")
-            st.download_button("Add study days to calendar · ICS", calendar_file(week, stamp), file_name="EG1011_study_days.ics", mime="text/calendar", use_container_width=True)
-        st.caption("Calendar entries are all-day personal study reminders. Use the official timetable and assessment dates for class commitments.")
+            st.download_button("Add study sessions to calendar · ICS", calendar_file(week, stamp), file_name="EG1011_study_days.ics", mime="text/calendar", use_container_width=True)
+        st.caption("Clock times use Queensland time when a start time is set. Otherwise the rows show minutes from the start of your session and calendar reminders are all-day.")
 
 elif view == "My progress":
     a, b, c = st.columns(3)
