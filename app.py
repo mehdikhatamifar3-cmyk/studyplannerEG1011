@@ -44,19 +44,19 @@ h = lambda text: escape(str(text), quote=True)
 
 st.markdown("""
 <style>
-:root{--navy:#172f49;--ink:#243b51;--muted:#556b7e;--line:#dce5ee;--teal:#087f8c;--page:#f5f7fb}
+:root{--navy:#172f49;--ink:#243b51;--muted:#556b7e;--line:#dce5ee;--teal:#146f78;--page:#f5f7fb}
 .stApp{background:var(--page);color:var(--ink)}.block-container{max-width:1560px;padding-top:4.4rem;padding-bottom:2rem}
 html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
 h1,h2,h3,h4{color:var(--navy);letter-spacing:-.025em}p{line-height:1.6}
 section[data-testid="stSidebar"]{background:white;border-right:1px solid var(--line)}section[data-testid="stSidebar"] .block-container{padding-top:1.6rem}
 [data-testid="stSidebar"] label{font-size:.86rem}[data-testid="stSidebar"] h3{font-size:1.15rem}
-.brand{display:flex;gap:13px;align-items:center;margin:0 0 3px}.brand h1{display:block;font-size:24px!important;letter-spacing:-.03em;margin:0;padding:0;line-height:1.2}.brand small{font-size:10px!important}.compact-meta{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.compact-meta span{font-size:11px;border:1px solid #d7e3ec;border-radius:20px;padding:6px 12px;color:#496578;background:white}.topic-line{margin:0 0 3px}.orbit-summary{font-size:12px;color:#587087;text-align:right;margin:3px 0}.topic-line .focus-title{font-size:1.4rem;margin:0;padding:0}.topic-line .kicker{margin:0 0 3px}.brand-mark{border:2px solid #087f8c;border-radius:50%;width:32px;height:32px;position:relative}.brand-mark:after{content:'';position:absolute;border:2px solid #c16a31;border-radius:50%;width:22px;height:22px;left:12px;top:8px}.brand strong{display:block;color:#172f49}.brand small{display:block;color:#62778a;font-size:10px;letter-spacing:.13em;text-transform:uppercase}
+.brand{display:flex;gap:16px;align-items:center;margin:0 0 3px}.brand h1{display:block;font-size:32px!important;letter-spacing:-.035em;margin:0;padding:0;line-height:1.2}.brand small{font-size:10.5px!important}.compact-meta{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.compact-meta span{font-size:11px;border:1px solid #d7e3ec;border-radius:20px;padding:6px 12px;color:#496578;background:white}.topic-line{margin:0 0 3px}.orbit-summary{font-size:12px;color:#587087;text-align:right;margin:3px 0}.topic-line .focus-title{font-size:1.4rem;margin:0;padding:0}.topic-line .kicker{margin:0 0 3px}.brand-mark{width:58px;height:52px;flex:0 0 58px;position:relative}.brand-mark:before,.brand-mark:after{content:"";position:absolute;border-radius:50%;border:2.5px solid}.brand-mark:before{width:44px;height:44px;left:0;top:0;border-color:#146F78}.brand-mark:after{width:33px;height:33px;left:21px;top:14px;border-color:#A85E32}.brand strong{display:block;color:#172f49}.brand small{display:block;color:#62778a;font-size:10px;letter-spacing:.13em;text-transform:uppercase}
 .kicker{font-size:10px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:#58748a;margin:4px 0 5px}.focus-title{font-size:1.5rem;font-weight:750;line-height:1.3;color:#172f49;margin:0 0 7px}.focus-copy{font-size:.9rem;color:#556b7e;margin:0 0 8px;max-width:950px}.pill{display:inline-block;font-size:10px;font-weight:650;border-radius:20px;padding:5px 10px;background:#e8eef4;margin:2px 6px 2px 0;color:#36556f}.source{color:#62778b;font-size:11px;margin:9px 0 20px}
 .material{border-left:4px solid var(--resource-color);padding:2px 0 2px 14px;margin:10px 0 14px}.material h4{font-size:1.03rem;margin:0 0 6px;padding:0}.material p{font-size:.84rem;color:#496277;margin:0;line-height:1.6}.material .kicker{color:var(--resource-color)}
 .step{display:flex;gap:12px;align-items:flex-start;padding:13px 0 11px;border-bottom:1px solid #e4ebf1}.step-number{background:var(--c);color:white;flex:0 0 28px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:750}.step-title{font-size:.88rem;font-weight:700;color:#1f3a51}.step-meta{color:#5b7082;font-size:11px;margin:2px 0 4px}.step-reason{font-size:.8rem;color:#546b7f;line-height:1.45}.step-done{opacity:.6}.mini-stat{border:1px solid #dce5ee;background:white;border-radius:14px;padding:14px 17px;margin:3px 0 15px}.mini-stat b{font-size:1.5rem;color:#172f49;display:block}.mini-stat span{font-size:11px;color:#607487}.bridge{color:#3d5d77;font-size:.82rem;line-height:1.6}.footer{border-top:1px solid #dce5ee;padding-top:10px;margin-top:16px;color:#60768a;font-size:11px;line-height:1.6}
-[data-testid="stVerticalBlockBorderWrapper"]>div{border-radius:17px!important}.stButton button,.stDownloadButton button,.stLinkButton a{border-radius:10px;font-weight:600}.stButton button[kind="primary"]{background:#087f8c;border-color:#087f8c;color:white}.stButton button[kind="primary"]:hover{background:#066c77;border-color:#066c77}
+[data-testid="stVerticalBlockBorderWrapper"]>div{border-radius:17px!important}.stButton button,.stDownloadButton button,.stLinkButton a{border-radius:10px;font-weight:600}.stButton button[kind="primary"]{background:#146f78;border-color:#146f78;color:white}.stButton button[kind="primary"]:hover{background:#105c64;border-color:#105c64}
 div[data-baseweb="select"]>div{border-radius:10px}[data-testid="stMetricValue"]{font-size:1.5rem}button:focus-visible{outline:3px solid #357cb6!important;outline-offset:2px}
-@media(max-width:800px){.block-container{padding-top:4.25rem;padding-left:1rem;padding-right:1rem}.hero{padding:22px 20px;border-radius:16px}.hero h1{max-width:95%;font-size:1.65rem}.hero-tags{gap:5px}.hero-tag{font-size:10px}.focus-title{font-size:1.3rem}}
+@media(max-width:800px){.brand{gap:12px}.brand h1{font-size:28px!important}.brand-mark{transform:scale(.87);transform-origin:left center;width:51px;flex-basis:51px}.brand small{font-size:9px!important}.block-container{padding-top:4.25rem;padding-left:1rem;padding-right:1rem}.hero{padding:22px 20px;border-radius:16px}.hero h1{max-width:95%;font-size:1.65rem}.hero-tags{gap:5px}.hero-tag{font-size:10px}.focus-title{font-size:1.3rem}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -282,7 +282,7 @@ if view == "My pathway":
     first = next((dict(b, step=i) for i, b in enumerate(plan, 1) if b["key"] not in p["completed"]), None)
     active_resource = ss.resource_picker if ss.resource_picker in topic["activities"] else "LN"
     event = learning_map(mode="resources", payload={
-        "topic": topic, "resources": [dict(resources[i], url=resource_url(topic, resources[i])) for i in topic["activities"]],
+        "topic": topic, "materials": activities, "resources": [dict(resources[i], url=resource_url(topic, resources[i])) for i in topic["activities"]],
         "plan": main_blocks, "selected_resource": active_resource,
         "completed": [a for a in topic["activities"] if activity_key(topic["id"], a) in p["completed"]],
         "next": first, "source": source_text(topic), "check_result": p["checks"].get(topic["id"]),
@@ -316,6 +316,7 @@ if view == "My pathway":
             ss.resource_picker = "LN"
         material_id = st.selectbox("Explore a material", topic["activities"], format_func=lambda r: resources[r]["title"], key="resource_picker")
         item = resources[material_id]
+        st.caption(f"{item.get('symbol', item['id'])} · {item.get('definition', item['type'])}")
         st.markdown(f'<div class="material" style="--resource-color:{item["color"]}"><div class="kicker">{h(item["phase"])} · {h(item["type"])}</div><h4>{h(item["title"])}</h4><p>{h(item["guidance"])}</p></div>', unsafe_allow_html=True)
         link = resource_url(topic, item)
         if link:
@@ -398,7 +399,7 @@ elif view == "Weekly studio":
         mini_stat(s1, f"{week['minutes']} / {week['capacity']}", "minutes planned / available")
         mini_stat(s2, len(week["route"]), "topics in your learning route, including prerequisites")
         mini_stat(s3, len({b["topic_id"] for b in week["backlog"]}), "topics with activities still to schedule")
-        handle_event(learning_map(mode="week", payload=week, key="weekly_timeline", default=None))
+        handle_event(learning_map(mode="week", payload=dict(week, materials=activities), key="weekly_timeline", default=None))
         if week["backlog"]:
             st.info(f"Your available time leaves {len(week['backlog'])} activities for a later week. Add time, narrow the focus, or mark topics you can already solve in My progress.")
             with st.expander("See what carries into the next week"):
