@@ -4,87 +4,111 @@
     "title": "QuickGuide",
     "short_title": "QuickGuide",
     "type": "Overview",
-    "color": "#657188",
+    "color": "#5D6B82",
     "minutes": 6,
     "minimum_minutes": 4,
     "phase": "Understand",
-    "guidance": "Preview definitions and decision rules, then close the guide and explain which method applies. Locate the topic-matched QuickGuide on the EG1011 course site."
+    "guidance": "Preview definitions and decision rules, then close the guide and explain which method applies. Locate the topic-matched QuickGuide on the EG1011 course site.",
+    "symbol": "QG",
+    "definition": "A concise overview of the topic, key formulas and method-selection rules.",
+    "legend_order": 4
   },
   {
     "id": "LN",
-    "title": "Lecture examples",
-    "short_title": "Lecture\nexamples",
+    "title": "Lecture notes and examples",
+    "short_title": "Lecture\nnotes",
     "type": "Worked example",
-    "color": "#087F8C",
+    "color": "#146F78",
     "minutes": 15,
     "minimum_minutes": 6,
     "phase": "Understand",
-    "guidance": "Cover the worked solution. Attempt the example, explain each equation, then compare your reasoning with the notes."
+    "guidance": "Cover the worked solution. Attempt the example, explain each equation, then compare your reasoning with the notes.",
+    "symbol": "LN",
+    "definition": "Read the lecture notes and re-solve the worked examples with the solution covered.",
+    "legend_order": 1
   },
   {
     "id": "T",
     "title": "T-type tutorial questions",
     "short_title": "T-type\nquestions",
     "type": "Guided practice",
-    "color": "#397DB5",
+    "color": "#435CAA",
     "minutes": 20,
     "minimum_minutes": 10,
     "phase": "Practise",
-    "guidance": "Attempt topic-matched T-type questions before the tutorial. Mark the exact line or decision to discuss; write your own solution after any help."
+    "guidance": "Attempt topic-matched T-type questions before the tutorial. Mark the exact line or decision to discuss; write your own solution after any help.",
+    "symbol": "T",
+    "definition": "Tutorial questions to attempt before class and develop with guidance when needed.",
+    "legend_order": 2
   },
   {
     "id": "H",
     "title": "H-type independent questions",
     "short_title": "H-type\nquestions",
     "type": "Independent practice",
-    "color": "#C16A31",
+    "color": "#A85E32",
     "minutes": 20,
     "minimum_minutes": 12,
     "phase": "Practise",
-    "guidance": "Attempt a topic-matched H-type problem without a solution open. Draw the diagram, choose the method, solve, and check units before comparing."
+    "guidance": "Attempt a topic-matched H-type problem without a solution open. Draw the diagram, choose the method, solve, and check units before comparing.",
+    "symbol": "H",
+    "definition": "Independent questions to attempt before opening notes, solutions or support materials.",
+    "legend_order": 3
   },
   {
     "id": "SBS",
     "title": "Step by Step with Mehdi",
     "short_title": "Step by\nStep",
     "type": "Targeted support",
-    "color": "#8B66AD",
+    "color": "#7D57A7",
     "minutes": 10,
     "minimum_minutes": 7,
     "phase": "Understand",
-    "guidance": "Use the matching Step by Step PDF for the point where your attempt stalled. Predict the next step, then retry the problem with the PDF closed."
+    "guidance": "Use the matching Step by Step PDF for the point where your attempt stalled. Predict the next step, then retry the problem with the PDF closed.",
+    "symbol": "SBS",
+    "definition": "PDF support that explains a method one step at a time, followed by your own retry.",
+    "legend_order": 5
   },
   {
     "id": "APP",
     "title": "Interactive exercise app",
     "short_title": "Interactive\napp",
     "type": "Concept experiment",
-    "color": "#9B7F19",
+    "color": "#936C18",
     "minutes": 10,
     "minimum_minutes": 6,
     "phase": "Practise",
-    "guidance": "Use the topic-matched exercise on the course site. Predict before changing an input; explain the result and test the same idea on paper."
+    "guidance": "Use the topic-matched exercise on the course site. Predict before changing an input; explain the result and test the same idea on paper.",
+    "symbol": "APP",
+    "definition": "An interactive exercise for testing a concept, prediction or common misconception.",
+    "legend_order": 6
   },
   {
     "id": "SIA",
     "title": "Solutions in Action with Mehdi",
     "short_title": "Solutions\nin Action",
     "type": "Video feedback",
-    "color": "#B05B7E",
+    "color": "#AB4E77",
     "minutes": 10,
     "minimum_minutes": 7,
     "phase": "Understand",
-    "guidance": "Attempt the problem first. Watch only the relevant segment, pause before the next step, then close the video and re-solve that step yourself."
+    "guidance": "Attempt the problem first. Watch only the relevant segment, pause before the next step, then close the video and re-solve that step yourself.",
+    "symbol": "SIA",
+    "definition": "A video walkthrough to compare with your attempt, followed by a closed-video retry.",
+    "legend_order": 7
   },
   {
     "id": "EXIT",
     "title": "Recall and exit check",
     "short_title": "Recall &\nexit check",
     "type": "Retrieval practice",
-    "color": "#37856A",
+    "color": "#28755E",
     "minutes": 5,
     "minimum_minutes": 3,
     "phase": "Reflect",
-    "guidance": "With notes closed, choose the method for a fresh problem, outline the steps and check one result. Record what still needs practice; completion alone does not prove independent skill."
+    "guidance": "With notes closed, choose the method for a fresh problem, outline the steps and check one result. Record what still needs practice; completion alone does not prove independent skill.",
+    "symbol": "EXIT",
+    "definition": "A short closed-book check: choose a method, recall the main steps and reflect on gaps.",
+    "legend_order": 8
   }
 ]
