@@ -1,0 +1,9 @@
+[
+{"id":"QG","title":"QuickGuide","type":"QuickGuide","importance":5,"minutes":8,"difficulty":"Foundation","sequence":1,"guidance":"Find the QuickGuide on the EG1011 website. Review the key concepts, formulas, diagrams, and decision rules."},
+{"id":"LN","title":"Selected lecture-note sections","type":"Lecture notes","importance":5,"minutes":15,"difficulty":"Developing","sequence":2,"guidance":"Open the lecture notes on the EG1011 website. Study only the sections connected to the current outcomes and annotate one worked example."},
+{"id":"SBS","title":"Step by Step with Mehdi","type":"Step by Step with Mehdi","importance":4,"minutes":15,"difficulty":"Foundation","sequence":3,"guidance":"Use the relevant Step by Step with Mehdi PDF. Pause at each decision and predict the next step before reading it."},
+{"id":"APP","title":"Interactive exercise app","type":"Interactive app","importance":4,"minutes":12,"difficulty":"Developing","sequence":4,"guidance":"Open the matching interactive exercise from the subject website. Use feedback to identify misconceptions before independent practice."},
+{"id":"T","title":"T-type tutorial questions","type":"T questions","importance":5,"minutes":20,"difficulty":"Standard","sequence":5,"guidance":"Attempt the relevant T question and explain why each equation or method is appropriate. Use tutorial support where needed."},
+{"id":"H","title":"H-type independent questions","type":"H questions","importance":4,"minutes":20,"difficulty":"Standard","sequence":6,"guidance":"Attempt the relevant H question independently before checking any worked solution or video."},
+{"id":"EXIT","title":"Exit check","type":"Exit check","importance":4,"minutes":10,"difficulty":"Standard","sequence":7,"guidance":"Test whether you can select the method and complete the main steps without prompts. Target at least 4 out of 5."}
+]
