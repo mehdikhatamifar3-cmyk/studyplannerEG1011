@@ -12,7 +12,7 @@ from streamlit.components.v1 import declare_component
 from planner import (AREA_COLORS, CHALLENGES, GOALS, LEVELS, PROBLEM_ROUTES, activity_key,
                      blank_progress, build_session, build_week, calendar_file,
                      csv_plan, due_topics, gaps, level, next_gap, prerequisite_order,
-                     progress_json, rate_topic, resource_url, validate_catalog,
+                     progress_json, progress_overview, rate_topic, resource_url, validate_catalog,
                      validate_progress, weekly_csv)
 
 BASE = Path(__file__).resolve().parent
@@ -127,6 +127,18 @@ def handle_event(event):
     elif kind == "view" and event.get("id") in ("My pathway", "Topic connections", "Weekly studio", "My progress"):
         ss.pending_view = event["id"]
         st.rerun()
+    elif kind == "progress_rate":
+        tid, value = event.get("topic_id"), event.get("level")
+        if isinstance(tid, str) and tid in by_topic and type(value) is int and value in range(4):
+            rate_topic(ss.progress, tid, value, today)
+            ss.epoch += 1
+            st.rerun()
+    elif kind == "plan_topic":
+        tid = event.get("topic_id")
+        if isinstance(tid, str) and tid in by_topic:
+            ss.week_targets = [tid]
+            ss.pending_view = "Weekly studio"
+            st.rerun()
     elif kind == "complete_activity":
         key = event.get("key", "")
         if not isinstance(key, str) or type(event.get("completed")) is not bool:
@@ -242,7 +254,7 @@ if ss.get("storage_notice"):
     st.info(ss.storage_notice)
 
 view = st.radio("Explore your learning", ["My pathway", "Topic connections", "Weekly studio", "My progress"], horizontal=True, label_visibility="collapsed", key="view")
-if view != "Weekly studio":
+if view not in ("Weekly studio", "My progress"):
     title_col, summary_col = st.columns([3.4, 1.6], vertical_alignment="center")
     with title_col:
         st.markdown(f'<div class="topic-line"><div class="kicker">{h(topic["area"])} · {"Session "+str(topic["session"]) if topic["session"] else "Foundations"}</div><h2 class="focus-title">{h(topic["title"])}</h2></div>', unsafe_allow_html=True)
@@ -465,45 +477,64 @@ elif view == "Weekly studio":
         st.caption("Clock times use Queensland time when a start time is set. Otherwise the rows show minutes from the start of your session and calendar reminders are all-day.")
 
 elif view == "My progress":
-    a, b, c = st.columns(3)
-    mini_stat(a, independent_count, "topics rated independent")
-    mini_stat(b, len(p["completed"]), "distinct activities completed")
-    mini_stat(c, len(due_topics(p, by_topic, today)), "topics suggested for a spaced review")
-    left, right = st.columns([1.5, 1], gap="large")
-    with left:
-        st.markdown("#### Tell the planner what you already know")
-        st.caption("Ratings are your self-assessment. An activity tick or a correct concept answer does not automatically change them.")
-        rate_current_topic()
-        with st.expander("Quick setup: add familiar topics", expanded=not bool(p["ratings"])):
-            with st.form("bulk_ratings"):
-                known = st.multiselect("Select topics you have already practised", list(by_topic), format_func=lambda t: f"{by_topic[t]['area']} · {by_topic[t]['title']}")
-                rating = st.radio("I can solve these…", [2, 3], format_func=lambda n: LEVELS[n], horizontal=True)
-                if st.form_submit_button("Save these topic ratings", use_container_width=True):
+    st.markdown("### My progress")
+    st.caption("See what you can solve, find a useful next step and keep track of your practice.")
+    overview = progress_overview(p, by_topic, resources, today, ss.focus)
+    handle_event(learning_map(mode="progress", payload=dict(overview, focus=ss.focus, revision=ss.epoch),
+                              key="progress_dashboard", default=None))
+
+    with st.expander("Quick setup · rate several familiar topics"):
+        st.caption("Use the same self-assessment for several topics you have already tried. You can refine each rating in the topic dashboard.")
+        with st.form("bulk_ratings"):
+            known = st.multiselect("Select topics you have already practised", list(by_topic),
+                                   format_func=lambda t: f"{by_topic[t]['area']} · {by_topic[t]['title']}")
+            rating = st.radio("I can solve these…", [1, 2, 3], format_func=lambda n: LEVELS[n],
+                              index=1, horizontal=True)
+            if st.form_submit_button("Save these topic ratings", use_container_width=True):
+                if known:
                     for tid in known:
                         rate_topic(p, tid, rating, today)
+                    ss.epoch += 1
                     st.rerun()
-        st.markdown("#### Turn an error into your next practice target")
+                else:
+                    st.info("Select at least one topic to save a rating.")
+
+    with st.expander(f"My practice notebook · {len(p['errors'])} saved note{'s' if len(p['errors']) != 1 else ''}"):
+        st.caption("Connect an error to a topic and a next action. A useful note says what went wrong and what you will try differently.")
+        note_topic = st.selectbox("Topic for this note", list(by_topic), index=list(by_topic).index(ss.focus),
+                                  key="progress_note_topic",
+                                  format_func=lambda t: f"{by_topic[t]['area']} · {by_topic[t]['title']}")
         with st.form("error_note", clear_on_submit=True):
-            note = st.text_area("What went wrong, and what will you do differently?", placeholder="Example: I used the wrong moment arm. Next time I will draw the perpendicular distance before calculating.", max_chars=800, height=105)
-            if st.form_submit_button("Save my error note") and note.strip():
-                p["errors"] = (p["errors"] + [{"topic_id": topic["id"], "text": note.strip(), "date": today.isoformat()}])[-100:]
-                st.rerun()
-        for i, note in enumerate(reversed(p["errors"][-8:])):
-            with st.expander(f"{by_topic[note['topic_id']]['short_title']} · {note['date']}"):
-                st.text(note["text"])
-                st.button("Practise this topic", key=f"note_jump_{i}", on_click=queue_topic, args=(note["topic_id"], "My pathway"))
-    with right:
-        st.markdown("#### Revisit before you forget")
-        due = due_topics(p, by_topic, today)
-        if due:
-            for tid, when in due[:5]:
-                st.button("↻ " + by_topic[tid]["short_title"], key="due_"+tid, on_click=queue_topic, args=(tid, "My pathway"), use_container_width=True)
-            st.caption("Suggested intervals expand from 1 to 3, 7 and 14 days after ratings on different dates. Change the plan if recall is difficult.")
+            note = st.text_area("What went wrong, and what will you do differently?",
+                                placeholder="I used the wrong moment arm. Next time I will draw the perpendicular distance before calculating.",
+                                max_chars=800, height=105)
+            if st.form_submit_button("Save my error note"):
+                if note.strip():
+                    p["errors"] = (p["errors"] + [{"topic_id": note_topic, "text": note.strip(), "date": today.isoformat()}])[-100:]
+                    ss.epoch += 1
+                    st.rerun()
+                else:
+                    st.info("Write a short note before saving.")
+        if p["errors"]:
+            note_ids = list(dict.fromkeys(n["topic_id"] for n in reversed(p["errors"])))
+            note_filter = st.selectbox("Show saved notes for", ["all"] + note_ids,
+                                       format_func=lambda t: "All topics" if t == "all" else by_topic[t]["title"])
+            shown_notes = [n for n in reversed(p["errors"]) if note_filter == "all" or n["topic_id"] == note_filter]
+            for index, saved_note in enumerate(shown_notes[:8]):
+                with st.container(border=True):
+                    st.markdown(f"**{h(by_topic[saved_note['topic_id']]['title'])}** · {saved_note['date']}", unsafe_allow_html=True)
+                    st.text(saved_note["text"])
+                    st.button("Practise this topic", key=f"note_jump_{index}", on_click=queue_topic,
+                              args=(saved_note["topic_id"], "My pathway"))
+            if len(shown_notes) > 8:
+                st.caption(f"Showing the latest 8 of {len(shown_notes)} notes. Your backup includes all saved notes.")
         else:
-            st.caption("No reviews are due yet. After practising, save a topic rating to start suggested spaced reviews.")
-        st.markdown("#### Keep your progress")
-        st.caption("Progress is saved automatically in this browser when browser storage is available. Download a backup to use another device or browser.")
-        st.download_button("Download progress backup · JSON", progress_json(p), file_name=f"EG1011_progress_{today.isoformat()}.json", mime="application/json", use_container_width=True)
+            st.caption("No notes yet. Record one helpful change after your next problem.")
+
+    with st.expander("Keep my progress · backup, restore and reset"):
+        st.caption("Progress saves in this browser when storage is available. Download a backup to move it to another browser or device.")
+        st.download_button("Download progress backup · JSON", progress_json(p),
+                           file_name=f"EG1011_progress_{today.isoformat()}.json", mime="application/json", use_container_width=True)
         upload = st.file_uploader("Restore a progress backup", type=["json"], help="An EG1011 progress backup up to 200 KB.")
         if upload is not None and st.button("Restore this backup", use_container_width=True):
             try:
@@ -516,18 +547,12 @@ elif view == "My progress":
                 st.rerun()
             except (ValueError, TypeError, KeyError, UnicodeDecodeError, OverflowError) as exc:
                 st.error(f"The backup could not be restored. {exc}")
-        with st.expander("Clear progress on this browser"):
-            confirm = st.checkbox("Clear my saved topic ratings, activities and error notes")
-            if st.button("Clear my progress", disabled=not confirm, use_container_width=True):
-                ss.progress = blank_progress()
-                ss.storage_ready = True
-                ss.epoch += 1
-                st.rerun()
-        with st.expander("My topic ratings"):
-            rated = [t for t in topics if level(p, t["id"]) > 0]
-            if not rated:
-                st.caption("No ratings saved yet.")
-            for t in rated:
-                st.caption(t["title"] + " · " + LEVELS[level(p, t["id"])])
+        st.markdown("**Clear progress on this browser**")
+        confirm = st.checkbox("Clear my saved topic ratings, activities and error notes")
+        if st.button("Clear my progress", disabled=not confirm, use_container_width=True):
+            ss.progress = blank_progress()
+            ss.storage_ready = True
+            ss.epoch += 1
+            st.rerun()
 
 st.markdown('<div class="footer">EG1011 · Learn → attempt → check → revisit.</div>', unsafe_allow_html=True)
