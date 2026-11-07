@@ -38,7 +38,13 @@ except (OSError, ValueError, KeyError, TypeError) as exc:
     st.error(f"The course map needs an instructor update: {exc}")
     st.stop()
 
-learning_map = declare_component("eg1011_learning_map", path=str(BASE / "components/learning_map"))
+_learning_map = declare_component("eg1011_learning_map", path=str(BASE / "components/learning_map"))
+
+
+def learning_map(**kwargs):
+    return _learning_map(appearance=st.session_state.get("appearance", "System"), **kwargs)
+
+
 today = datetime.now(ZoneInfo("Australia/Brisbane")).date()
 h = lambda text: escape(str(text), quote=True)
 
@@ -66,12 +72,24 @@ div[data-baseweb="select"]>div{border-radius:10px}[data-testid="stMetricValue"]{
 </style>
 """, unsafe_allow_html=True)
 
+try:
+    appearance_css = (BASE / "components/learning_map/appearance.css").read_text(encoding="utf-8")
+except OSError:
+    st.error("Upload components/learning_map/appearance.css with this update, then restart the app.")
+    st.stop()
+appearance_selector = {"Light": "light", "Dark": "dark", "High contrast": "contrast"}.get(st.session_state.get("appearance"))
+if appearance_selector:
+    # Apply the same explicit palette to the parent document. System mode uses
+    # the stylesheet's device preference without a server-side theme change.
+    appearance_css = appearance_css.replace(f'html[data-appearance="{appearance_selector}"]', ":root")
+st.markdown("<style>" + appearance_css + "</style>", unsafe_allow_html=True)
+
 # Callbacks queue topic changes so map clicks and native widgets stay in sync.
 ss = st.session_state
 for key, value in {"progress": blank_progress(), "focus": "S1_FORCE", "area_picker": "Statics",
                    "topic_picker": "S1_FORCE", "resource_picker": "LN", "storage_ready": False,
                    "storage_failed": False, "boot": str(uuid4()), "handled_events": [], "epoch": 0,
-                   "completion_notice": None}.items():
+                   "completion_notice": None, "appearance": "System"}.items():
     if key not in ss:
         ss[key] = value
 
@@ -220,6 +238,8 @@ with brand_col:
 with settings_col:
     with st.popover("Study settings", use_container_width=True):
         st.markdown("#### Make the plan yours")
+        st.selectbox("Display mode", ["System", "Light", "Dark", "High contrast"], key="appearance",
+                     help="System follows your device. Choose a fixed mode if you prefer brighter, darker or stronger contrast.")
         st.radio("Subject area", ["Statics", "Dynamics", "Foundations"], key="area_picker", on_change=change_area, horizontal=True)
         choices = [t["id"] for t in topics if t["area"] == ss.area_picker]
         st.selectbox("What are you working on?", choices, key="topic_picker", format_func=lambda t: by_topic[t]["title"], on_change=change_topic)
