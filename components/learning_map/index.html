@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>EG1011 interactive learning map</title>
 <style>
   *{box-sizing:border-box}body{margin:0;background:transparent;color:#20364d;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:14px}
@@ -90,6 +91,7 @@
 @media(hover:none),(pointer:coarse){.node-motion,.node.is-hot>.node-motion,.node.is-selected>.node-motion{transform:none!important}.day:hover{transform:none}}
 
 </style>
+<link rel="stylesheet" href="appearance.css?v=20261107-1">
 </head>
 <body><div id="root"></div><div id="live" class="sr-only" aria-live="polite"></div>
 <script>
@@ -103,13 +105,33 @@
   // Measure content, not the iframe viewport: viewport-based height can grow
   // by a few pixels on every resize and create a feedback loop.
   const height=()=>post('streamlit:setFrameHeight',{height:Math.ceil(root.getBoundingClientRect().height)+2});
-  const el=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;};
+  const el=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(['fill','stroke','stop-color'].includes(k)?themeColor(v):v));if(text!==undefined)n.textContent=text;return n;};
   const html=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
   const motionAllowed=()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const compactDiagram=()=>window.innerWidth<700;
+  function themeColor(value){
+    const color=String(value).toLowerCase();
+    const map={
+      '#20364d':'ui-text','#61758a':'ui-muted','#526a7c':'ui-muted','#cddfe9':'ui-diagram-line',
+      '#608e9b':'ui-diagram-line','#7393a7':'ui-diagram-line','#146f78':'material-LN',
+      '#435caa':'material-T','#a85e32':'material-H','#5d6b82':'material-QG','#7d57a7':'material-SBS',
+      '#936c18':'material-APP','#ab4e77':'material-SIA','#28755e':'material-EXIT','#287352':'ui-positive',
+      '#8b66ad':'area-foundations','#c16a31':'area-dynamics',
+      '#7b8d9e':'status-unknown','#a56327':'status-practice','#4861a8':'status-help','#247762':'status-independent',
+      'white':'ui-on-material','#fff':'ui-on-material','#ffffff':'ui-on-material'
+    };
+    return map[color]?'var(--'+map[color]+')':value;
+  }
+  function applyAppearance(){
+    const requested=args.appearance||'System';
+    const mode=requested==='High contrast'?'contrast':requested==='Light'?'light':requested==='Dark'?'dark':window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    document.documentElement.dataset.appearance=mode;
+    return mode;
+  }
+
   let hotResource=null, completionSeen=false, lastCompletionNotice=null, justCompleted=new Set();
   function glassNode(node,x,y,r,color,{width=2,dashed=false}={}){
-    node.style.setProperty('--node-color',color);
+    color=themeColor(color);node.style.setProperty('--node-color',color);
     node.dataset.cx=x;node.dataset.cy=y;node.dataset.radius=r;
     // The fixed hit area prevents hover flicker while the visible face lifts.
     node.appendChild(el('circle',{class:'node-hit',cx:x,cy:y,r:r+10,fill:'transparent',stroke:'none','pointer-events':'all'}));
@@ -137,7 +159,7 @@
     const p=args.payload,id=hotResource||(orbitPanel?.kind==='resource'?orbitPanel.id:['topic','check','prerequisites'].includes(orbitPanel?.kind)?'_topic':null);
     const index=p.plan.findIndex(b=>b.id===id),before=index>0?p.plan[index-1].id:null;
     const after=index>=0&&index<p.plan.length-1?p.plan[index+1].id:(p.next?.topic_id===p.topic.id&&p.next.id!==id?p.next.id:null);
-    const colour=p.resources.find(r=>r.id===id)?.color||'#146f78';
+    const colour=themeColor(p.resources.find(r=>r.id===id)?.color||'#146f78');
     root.querySelectorAll('.node').forEach(node=>{
       node.classList.toggle('is-hot',node.dataset.id===hotResource);
       node.classList.toggle('is-selected',node.dataset.id===id);
@@ -195,7 +217,7 @@
   function label(parent,text,x,y,{size=14,fill='#20364d',weight=600,max=17,lineHeight=18}={}){
     let words=String(text).split(/\s+/),lines=[],line='';
     for(const word of words){if(line && (line+' '+word).length>max){lines.push(line);line=word;}else line=line?line+' '+word:word;}if(line)lines.push(line);
-    const t=el('text',{x,y:y-(lines.length-1)*lineHeight/2,'text-anchor':'middle',fill,'font-size':size,'font-weight':weight});
+    const t=el('text',{class:['white','#fff','#ffffff'].includes(String(fill).toLowerCase())?'badge-text':'',x,y:y-(lines.length-1)*lineHeight/2,'text-anchor':'middle',fill,'font-size':size,'font-weight':weight});
     lines.forEach((s,i)=>t.appendChild(el('tspan',{x,dy:i?lineHeight:0},s)));parent.appendChild(t);return t;
   }
   function eventNode(node,kind,id,description,onChoose=null){
@@ -221,7 +243,7 @@
     root.appendChild(toolbar);const stage=html('div','stage');stageElement=stage;stage.style.height=chartHeight+'px';
     const svg=el('svg',{viewBox:`0 0 ${width} ${viewHeight}`,role:'group','aria-label':title});viewport=svg;
     const defs=el('defs');const marker=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse'});marker.appendChild(el('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'#608e9b'}));defs.appendChild(marker);const shadow=el('filter',{id:'glass-shadow',x:'-30%',y:'-30%',width:'160%',height:'170%'});shadow.appendChild(el('feGaussianBlur',{stdDeviation:7}));defs.appendChild(shadow);
-    const frost=el('linearGradient',{id:'glass-frost',x1:'0%',y1:'0%',x2:'100%',y2:'100%'});frost.append(el('stop',{offset:'0%','stop-color':'#fff','stop-opacity':.96}),el('stop',{offset:'100%','stop-color':'#f7fbff','stop-opacity':.82}));defs.appendChild(frost);svg.appendChild(defs);
+    const frost=el('linearGradient',{id:'glass-frost',x1:'0%',y1:'0%',x2:'100%',y2:'100%'});frost.append(el('stop',{offset:'0%','stop-color':'var(--ui-circle-1)','stop-opacity':.96}),el('stop',{offset:'100%','stop-color':'var(--ui-circle-2)','stop-opacity':.82}));defs.appendChild(frost);svg.appendChild(defs);
     group=el('g');svg.appendChild(group);stage.appendChild(svg);root.appendChild(stage);apply();
     let drag=null;
     svg.addEventListener('pointerdown',e=>{if(e.target.closest('.node'))return;if(e.pointerType==='touch')return;drag={x:e.clientX,y:e.clientY,tx:transform.x,ty:transform.y};svg.setPointerCapture(e.pointerId);});
@@ -241,7 +263,7 @@
   }
   function materialBadge(material, className='material-symbol'){
     const badge=html('span',className,materialSymbol(material));
-    badge.style.setProperty('--c',material.color);badge.setAttribute('role','img');
+    badge.style.setProperty('--c',themeColor(material.color));badge.setAttribute('role','img');
     const meaning=materialSymbol(material)+' — '+material.title;
     badge.title=meaning;badge.setAttribute('aria-label',meaning);return badge;
   }
@@ -287,7 +309,7 @@
     if(orbitPanel.kind==='resource'){
       const resource=p.resources.find(r=>r.id===orbitPanel.id);if(!resource){orbitPanel=null;stageElement.classList.remove('is-panel-open');return;}
       const block=p.plan.find(b=>b.id===resource.id),done=p.completed.includes(resource.id);
-      panel.style.setProperty('--accent',resource.color);kicker.textContent=materialSymbol(resource)+' · '+(block?`Step ${block.step} · ${block.minutes} min`:'Optional support');title.textContent=resource.title;
+      panel.style.setProperty('--accent',themeColor(resource.color));kicker.textContent=materialSymbol(resource)+' · '+(block?`Step ${block.step} · ${block.minutes} min`:'Optional support');title.textContent=resource.title;
       const circle=root.querySelector(`.node[data-id="${resource.id}"] .halo`);circle?.setAttribute('stroke-opacity','.6');
       paragraph(block?.guidance||resource.guidance);
       if(resource.id==='LN'){paragraph(p.topic.practice_prompt,'practice-prompt');noteSource();}
@@ -510,7 +532,7 @@
   let progressUI={selected:null,area:null,status:'all',query:'',pending:null};
   function progressMap(){
     const p=args.payload,byId=Object.fromEntries(p.topics.map(t=>[t.id,t]));
-    const states=[{label:'Not checked',short:'Not checked',color:'#7B8D9E',symbol:'?'},{label:'Needs practice',short:'Needs practice',color:'#A56327',symbol:'↻'},{label:'Can solve with help',short:'With help',color:'#4861A8',symbol:'◐'},{label:'Can solve independently',short:'Independent',color:'#247762',symbol:'✓'}];
+    const states=[{label:'Not checked',short:'Not checked',color:'#7B8D9E',symbol:'?'},{label:'Needs practice',short:'Needs practice',color:'#A56327',symbol:'↻'},{label:'Can solve with help',short:'With help',color:'#4861A8',symbol:'◐'},{label:'Can solve independently',short:'Independent',color:'#247762',symbol:'✓'}].map(state=>({...state,color:themeColor(state.color)}));
     const niceDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
     if(!byId[progressUI.selected])progressUI.selected=byId[p.focus]?p.focus:p.topics[0]?.id;
     if(!progressUI.area)progressUI.area=byId[progressUI.selected]?.area||'Statics';
@@ -536,7 +558,7 @@
       if(p.actions.length>1){const others=html('div','p-other-next');p.actions.slice(1).forEach(action=>{const b=html('button','',action.label+' · '+byId[action.id].short_title);b.type='button';b.addEventListener('click',()=>choose(action.id,true));others.appendChild(b);});next.appendChild(others);}
     }top.appendChild(next);dash.appendChild(top);
     const recent=html('section','p-card p-recent'),recentText=html('div'),recentHelp=html('p','p-recent-help','Latest saved dates for ratings, completion marks, concept checks and notebook entries. Select a day for details.');recentHelp.setAttribute('aria-live','polite');const recorded=p.recent.reduce((sum,d)=>sum+d.total,0);recentText.append(html('h3','','Recent saved work'),html('p','p-sub',recorded?recorded+' saved records in the last 14 days': 'Your saved work will appear here as you practise.'));recent.appendChild(recentText);
-    const days=html('div','p-days');days.setAttribute('role','list');p.recent.forEach(day=>{const cell=html('div','p-activity-day');cell.setAttribute('role','listitem');const label=niceDate(day.date)+': '+day.ratings+' ratings, '+day.activities+' activity marks, '+day.checks+' concept checks, '+day.notes+' notes';cell.title=label;const square=html('button','p-activity-cell',day.total>9?'9+':day.total||'');square.type='button';square.setAttribute('aria-label',label);for(const event of ['pointerenter','focus','click'])square.addEventListener(event,()=>{recentHelp.textContent=label;});const shades=['#eef2f6','#dbeee5','#b1d6c5','#6fae94','#287b60'];square.style.setProperty('--activity-fill',shades[Math.min(day.total,4)]);if(day.total>=4)square.style.setProperty('--activity-ink','#fff');cell.append(square,html('small','',new Date(day.date+'T12:00:00').getDate()));days.appendChild(cell);});recent.append(days,recentHelp);dash.appendChild(recent);
+    const days=html('div','p-days');days.setAttribute('role','list');p.recent.forEach(day=>{const cell=html('div','p-activity-day');cell.setAttribute('role','listitem');const label=niceDate(day.date)+': '+day.ratings+' ratings, '+day.activities+' activity marks, '+day.checks+' concept checks, '+day.notes+' notes';cell.title=label;const square=html('button','p-activity-cell',day.total>9?'9+':day.total||'');square.type='button';square.setAttribute('aria-label',label);for(const event of ['pointerenter','focus','click'])square.addEventListener(event,()=>{recentHelp.textContent=label;});const shades=Array.from({length:5},(_,i)=>'var(--activity-'+i+')');square.style.setProperty('--activity-fill',shades[Math.min(day.total,4)]);square.style.setProperty('--activity-ink',day.total>=4?'var(--activity-ink-high)':'var(--activity-ink-low)');cell.append(square,html('small','',new Date(day.date+'T12:00:00').getDate()));days.appendChild(cell);});recent.append(days,recentHelp);dash.appendChild(recent);
     const workspace=html('div','p-workspace'),map=html('section','p-card p-topic-map'),inspector=html('section','p-card p-inspector');inspector.setAttribute('aria-label','Selected topic self-assessment');
     const head=html('div','p-map-heading'),headText=html('div');headText.append(html('h3','','Explore your topics'),html('p','p-sub','Select a topic to see evidence and update your rating.'));const shown=html('span','');shown.setAttribute('aria-live','polite');head.append(headText,shown);map.appendChild(head);
     const filters=html('div','p-filters');
@@ -563,7 +585,7 @@
       if(row.check){const check=html('p','p-check-evidence'+(row.check.correct?'':' retry'),(row.check.correct?'Latest concept check: correct':'Latest concept check: try this idea again')+' · '+niceDate(row.check.date));inspector.appendChild(check);}
       const buttons=html('div','p-button-row p-topic-actions'),practice=html('button','p-main-action','Open learning pathway'),weekly=html('button','p-secondary-action','Plan this topic');practice.type=weekly.type='button';practice.addEventListener('click',()=>value({kind:'topic',id:row.id,view:'My pathway'}));weekly.addEventListener('click',()=>value({kind:'plan_topic',topic_id:row.id}));buttons.append(practice,weekly);inspector.appendChild(buttons);
       const evidence=html('details','p-evidence-details'),marked=row.materials.filter(m=>m.completed).length;evidence.appendChild(html('summary','',marked+' / '+row.materials.length+' materials marked · learning evidence'));
-      const list=html('div','p-material-evidence');row.materials.forEach(material=>{const record=html('div','p-material-record'),symbol=html('i','',material.symbol);symbol.style.setProperty('--c',material.color);record.append(symbol,html('span','',material.title));if(material.completed)record.appendChild(html('b','','✓ Marked'));list.appendChild(record);});evidence.append(list,html('p','','Completion marks record activity. Your rating describes what you can solve. A concept check tests one idea.'));
+      const list=html('div','p-material-evidence');row.materials.forEach(material=>{const record=html('div','p-material-record'),symbol=html('i','',material.symbol);symbol.style.setProperty('--c',themeColor(material.color));record.append(symbol,html('span','',material.title));if(material.completed)record.appendChild(html('b','','✓ Marked'));list.appendChild(record);});evidence.append(list,html('p','','Completion marks record activity. Your rating describes what you can solve. A concept check tests one idea.'));
       const source=row.source;evidence.appendChild(html('p','',source.file+' · '+(source.pages[0]===source.pages[1]?'p. '+source.pages[0]:'pp. '+source.pages[0]+'–'+source.pages[1])));if(row.notes_count)evidence.appendChild(html('p','',row.notes_count+' saved '+(row.notes_count===1?'note':'notes')+' for this topic in the practice notebook below.'));inspector.appendChild(evidence);height();
     }
     areaSelect.addEventListener('change',()=>{progressUI.area=areaSelect.value;drawTopics();});statusSelect.addEventListener('change',()=>{progressUI.status=statusSelect.value;drawTopics();});search.addEventListener('input',()=>{progressUI.query=search.value;drawTopics();});
@@ -581,6 +603,7 @@
     }catch(err){status.textContent='Use a backup to keep your progress';if(storageBoot!==args.boot+'-error'){storageBoot=args.boot+'-error';value({kind:'storage_error'});}}
   }
   function render(){
+    applyAppearance();
     const signature=JSON.stringify({mode:args.mode,payload:args.payload,restore:args.restore,boot:args.boot,narrow:window.innerWidth<540});
     if(signature===lastSignature)return;lastSignature=signature;root.replaceChildren();group=null;
     if(args.mode==='storage')storage();else if(args.mode==='resources')resourceMap();else if(args.mode==='topics')topicMap();else if(args.mode==='week')weekMap();else if(args.mode==='progress')progressMap();
@@ -589,6 +612,8 @@
   window.addEventListener('message',e=>{if(e.source!==window.parent||!e.data||e.data.type!=='streamlit:render')return;args=e.data.args||{};render();});
   let resizeTimer,knownWidth=window.innerWidth;
   window.addEventListener('resize',()=>{if(window.innerWidth===knownWidth)return;knownWidth=window.innerWidth;clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{lastSignature='';render();},100);});
+  // Live palette changes update CSS/SVG variables without rebuilding forms.
+  const deviceScheme=window.matchMedia('(prefers-color-scheme: dark)');if(deviceScheme.addEventListener)deviceScheme.addEventListener('change',applyAppearance);else deviceScheme.addListener(applyAppearance);
   new ResizeObserver(()=>requestAnimationFrame(height)).observe(root);
   post('streamlit:componentReady',{apiVersion:1});
 })();
