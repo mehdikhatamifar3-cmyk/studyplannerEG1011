@@ -21,7 +21,7 @@
   /* Glass surfaces preserve the existing positions and typography. */
   .stage{background:radial-gradient(ellipse at 44% 40%,#ffffffcf 0%,#f2f7fbd9 100%);box-shadow:inset 0 1px 0 #ffffffd9}
   .node-motion{transform-box:view-box;transition:transform 210ms cubic-bezier(.2,.7,.2,1)}
-  .glass-face{width:100%;height:100%;border-radius:50%;background:rgba(255,255,255,.84);background:linear-gradient(140deg,rgba(255,255,255,.88),rgba(255,255,255,.61));backdrop-filter:blur(11px) saturate(1.12);-webkit-backdrop-filter:blur(11px) saturate(1.12);box-shadow:inset 0 1px 2px #ffffffed,inset 0 -1px 2px #bfd0df22;pointer-events:none}
+  .glass-face{pointer-events:none}
   .glass-shadow{transition:opacity 210ms ease}
   .node .halo{transition:stroke-opacity 200ms ease,stroke-width 200ms ease}
   .node.is-hot>.node-motion{transform:translateY(-4px) scale(1.035)}
@@ -78,6 +78,17 @@
 @media(max-width:360px){.p-summary-main{flex-direction:column;align-items:center}.p-status-key{width:100%;max-width:none}.p-topic-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.progress-dashboard .p-topic-tile{transition:none!important;transform:none!important}}
 
+/* Mobile diagrams use physical pixel sizes, natural page scrolling and SVG
+   surfaces. No HTML glass layer is placed over SVG labels. */
+.mobile-panel-back{display:none}
+@media(max-width:699px){
+  .map-zoom{display:none}.toolbar{gap:8px;padding-bottom:12px}.toolbar .hint{font-size:12px;margin-left:0;line-height:1.5}.toolbar button{min-width:44px;min-height:44px;padding:9px 12px}.stage{border-radius:16px;touch-action:pan-y pinch-zoom}.stage svg{touch-action:pan-y pinch-zoom}
+  .orbit-tools .next-chip{order:5;flex-basis:100%;max-width:100%;margin:0;white-space:normal;text-overflow:clip;overflow:visible;line-height:1.5;text-align:left;font-size:13px}.orbit-tools .gap-chip{margin-left:0;font-size:12px}.orbit-tools .desktop-key{display:none}.orbit-tools .mobile-key{display:inline}
+  .node-motion,.node.is-hot>.node-motion,.node.is-selected>.node-motion{transform:none!important;transition:none}.connection-flow{display:none}.glass-shadow{filter:none}.detail-panel,.day,.weekly-material-key,.p-card{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .orbit-stage.is-panel-open{height:auto!important;min-height:0}.orbit-stage.is-panel-open>svg{display:none}.orbit-stage .detail-panel{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:100%;max-width:none;max-height:none;padding:24px 19px 20px;border:0;border-top:4px solid var(--accent);border-radius:15px;box-shadow:none;background:#fff;overflow:visible}.orbit-stage .panel-body{overflow:visible;max-height:none}.orbit-stage .detail-panel h3{font-size:21px;line-height:1.35;margin-right:24px}.orbit-stage .panel-kicker{padding-right:37px;font-size:11px}.orbit-stage .panel-close{top:8px;right:8px;width:44px;min-height:44px;font-size:28px}.orbit-stage .panel-body p{font-size:14px;line-height:1.65}.orbit-stage .panel-body p.small{font-size:12px}.orbit-stage .panel-actions button,.orbit-stage .panel-body>button,.orbit-stage .answer-option{min-height:44px;font-size:14px}.orbit-stage .panel-actions button{flex:1 1 160px}.orbit-stage .panel-actions{gap:10px}.orbit-stage .gap-list button{min-height:44px;font-size:12px}.orbit-stage .material-meaning strong{font-size:14px}.orbit-stage .material-meaning small{font-size:12px}.orbit-stage .material-key-row{gap:12px;padding:15px 0}.orbit-stage .resource-link{display:block;min-height:44px;padding:12px 0}.orbit-stage .outcome-tags span{font-size:11px;line-height:1.5}.orbit-stage .mobile-panel-back{display:block;width:100%;margin-top:19px;min-height:44px;font-size:14px;background:#edf4f8;border-color:#d6e4ec}.orbit-stage .panel-enter{animation:content-open 150ms ease-out both}
+}
+@media(hover:none),(pointer:coarse){.node-motion,.node.is-hot>.node-motion,.node.is-selected>.node-motion{transform:none!important}.day:hover{transform:none}}
+
 </style>
 </head>
 <body><div id="root"></div><div id="live" class="sr-only" aria-live="polite"></div>
@@ -95,17 +106,19 @@
   const el=(tag,attrs={},text)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;};
   const html=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
   const motionAllowed=()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const compactDiagram=()=>window.innerWidth<700;
   let hotResource=null, completionSeen=false, lastCompletionNotice=null, justCompleted=new Set();
   function glassNode(node,x,y,r,color,{width=2,dashed=false}={}){
     node.style.setProperty('--node-color',color);
     node.dataset.cx=x;node.dataset.cy=y;node.dataset.radius=r;
     // The fixed hit area prevents hover flicker while the visible face lifts.
     node.appendChild(el('circle',{class:'node-hit',cx:x,cy:y,r:r+10,fill:'transparent',stroke:'none','pointer-events':'all'}));
-    node.appendChild(el('circle',{class:'glass-shadow',cx:x,cy:y+7,r:r-1,fill:'#173c53',opacity:.075,filter:'url(#glass-shadow)','pointer-events':'none'}));
+    node.appendChild(el('circle',{class:'glass-shadow',cx:x,cy:y+7,r:r-1,fill:'#173c53',opacity:compactDiagram()?.045:.075,filter:compactDiagram()?'none':'url(#glass-shadow)','pointer-events':'none'}));
     const face=el('g',{class:'node-motion'});face.style.transformOrigin=`${x}px ${y}px`;node.appendChild(face);
     face.appendChild(el('circle',{class:'halo',cx:x,cy:y,r:r+7,fill:'none',stroke:color,'stroke-opacity':.055,'stroke-width':7,'pointer-events':'none'}));
-    const pane=el('foreignObject',{x:x-r,y:y-r,width:2*r,height:2*r,'pointer-events':'none','aria-hidden':'true'});
-    const frost=document.createElementNS('http://www.w3.org/1999/xhtml','div');frost.setAttribute('class','glass-face');pane.appendChild(frost);face.appendChild(pane);
+    // Keep every surface and label in SVG paint order. A blurred HTML
+    // foreignObject can be composited above SVG text by mobile browsers.
+    face.appendChild(el('circle',{class:'glass-face',cx:x,cy:y,r,fill:'url(#glass-frost)','pointer-events':'none'}));
     face.appendChild(el('circle',{class:'main',cx:x,cy:y,r,fill:'#fff','fill-opacity':.025,stroke:color,'stroke-width':width,'stroke-dasharray':dashed?'4 5':'none'}));
     face.appendChild(el('circle',{class:'glass-rim',cx:x,cy:y,r:r-2,fill:'none',stroke:'#fff','stroke-opacity':.7,'stroke-width':1,'pointer-events':'none'}));
     return face;
@@ -165,7 +178,7 @@
     if(animate)traceConnections(paths);
   }
   function bindTopic(node,id){
-    const restore=()=>paintTopic(args.payload.nodes.find(n=>n.role==='focus')?.id||id);
+    const restore=()=>{if(args.mode==='topics')paintTopic(args.payload.nodes.find(n=>n.role==='focus')?.id||id);};
     node.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch'){node.classList.add('is-hot');paintTopic(id);}});
     node.addEventListener('pointerleave',()=>{node.classList.remove('is-hot');restore();});
     node.addEventListener('focus',()=>{node.classList.add('is-hot');paintTopic(id);});
@@ -201,13 +214,14 @@
   function canvas(width,chartHeight,viewHeight,title){
     const toolbar=html('div','toolbar');
     [['−','Zoom out',.8],['+','Zoom in',1.25],['Fit','Fit map',0]].forEach(([text,aria,k])=>{
-      const button=html('button','',text);button.setAttribute('aria-label',aria);button.addEventListener('click',()=>{
+      const button=html('button','map-zoom',text);button.type='button';button.setAttribute('aria-label',aria);button.addEventListener('click',()=>{
         if(!k)transform={x:0,y:0,k:1};else{const next=Math.max(.55,Math.min(2.8,transform.k*k)),ratio=next/transform.k;transform={x:width/2-(width/2-transform.x)*ratio,y:viewHeight/2-(viewHeight/2-transform.y)*ratio,k:next};}apply();});toolbar.appendChild(button);
     });
-    toolbar.appendChild(html('span','hint','Click a circle · Tab + Enter also works'));
+    toolbar.appendChild(html('span','hint',compactDiagram()?'Tap a circle to explore':'Click a circle · Tab + Enter also works'));
     root.appendChild(toolbar);const stage=html('div','stage');stageElement=stage;stage.style.height=chartHeight+'px';
     const svg=el('svg',{viewBox:`0 0 ${width} ${viewHeight}`,role:'group','aria-label':title});viewport=svg;
-    const defs=el('defs');const marker=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse'});marker.appendChild(el('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'context-stroke'}));defs.appendChild(marker);const shadow=el('filter',{id:'glass-shadow',x:'-30%',y:'-30%',width:'160%',height:'170%'});shadow.appendChild(el('feGaussianBlur',{stdDeviation:7}));defs.appendChild(shadow);svg.appendChild(defs);
+    const defs=el('defs');const marker=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse'});marker.appendChild(el('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'#608e9b'}));defs.appendChild(marker);const shadow=el('filter',{id:'glass-shadow',x:'-30%',y:'-30%',width:'160%',height:'170%'});shadow.appendChild(el('feGaussianBlur',{stdDeviation:7}));defs.appendChild(shadow);
+    const frost=el('linearGradient',{id:'glass-frost',x1:'0%',y1:'0%',x2:'100%',y2:'100%'});frost.append(el('stop',{offset:'0%','stop-color':'#fff','stop-opacity':.96}),el('stop',{offset:'100%','stop-color':'#f7fbff','stop-opacity':.82}));defs.appendChild(frost);svg.appendChild(defs);
     group=el('g');svg.appendChild(group);stage.appendChild(svg);root.appendChild(stage);apply();
     let drag=null;
     svg.addEventListener('pointerdown',e=>{if(e.target.closest('.node'))return;if(e.pointerType==='touch')return;drag={x:e.clientX,y:e.clientY,tx:transform.x,ty:transform.y};svg.setPointerCapture(e.pointerId);});
@@ -217,7 +231,7 @@
   }
   // Panels live within the orbit, so inspecting a material never scrolls or
   // reruns the page. Only progress/check actions need a Python round-trip.
-  let orbitPanel=null, panelTopic='', nativeResource=null;
+  let orbitPanel=null, panelTopic='', nativeResource=null, orbitLayoutContext='';
   function actionButton(text, action, primary=false){
     const button=html('button',primary?'primary':'',text);button.type='button';button.addEventListener('click',action);return button;
   }
@@ -248,14 +262,17 @@
   function openOrbitPanel(kind,id=null){const changed=orbitPanel?.kind!==kind||orbitPanel?.id!==id;orbitPanel={kind,id};hotResource=null;renderOrbitPanel(true,changed);paintOrbit(changed);}
   function closeOrbitPanel(){
     const old=orbitPanel;orbitPanel=null;hotResource=null;const panel=stageElement?.querySelector('.detail-panel');
-    if(panel&&motionAllowed()){panel.classList.remove('panel-enter');panel.classList.add('panel-closing');panel.setAttribute('aria-hidden','true');panel.removeAttribute('role');setTimeout(()=>panel.remove(),160);}else panel?.remove();paintOrbit();
+    stageElement?.classList.remove('is-panel-open');
+    if(panel&&motionAllowed()&&!compactDiagram()){panel.classList.remove('panel-enter');panel.classList.add('panel-closing');panel.setAttribute('aria-hidden','true');panel.removeAttribute('role');setTimeout(()=>panel.remove(),160);}else panel?.remove();paintOrbit();
     root.querySelectorAll('.node .halo').forEach(n=>n.setAttribute('stroke-opacity','.06'));
-    if(old?.kind==='materials'){root.querySelector('.key-button')?.focus({preventScroll:true});return;}
-    const id=old?.kind==='resource'?old.id:'_topic';root.querySelector(`.node[data-id="${id}"]`)?.focus({preventScroll:true});
+    const id=old?.kind==='resource'?old.id:'_topic';
+    const target=old?.kind==='materials'?root.querySelector('.key-button'):root.querySelector(`.node[data-id="${id}"]`);
+    height();requestAnimationFrame(()=>{target?.focus({preventScroll:!compactDiagram()});if(compactDiagram())target?.scrollIntoView({block:'center',behavior:'instant'});});
   }
   function renderOrbitPanel(focus=false,animate=false){
     if(!stageElement||args.mode!=='resources')return;
     stageElement.querySelector('.detail-panel')?.remove();
+    stageElement.classList.toggle('is-panel-open',Boolean(orbitPanel));
     root.querySelectorAll('.node .halo').forEach(n=>n.setAttribute('stroke-opacity','.06'));
     if(!orbitPanel)return;
     const p=args.payload,panel=html('section','detail-panel');
@@ -268,7 +285,7 @@
     const jump=view=>value({kind:'view',id:view});
     const noteSource=()=>paragraph('Lecture notes: '+p.source,'small');
     if(orbitPanel.kind==='resource'){
-      const resource=p.resources.find(r=>r.id===orbitPanel.id);if(!resource){orbitPanel=null;return;}
+      const resource=p.resources.find(r=>r.id===orbitPanel.id);if(!resource){orbitPanel=null;stageElement.classList.remove('is-panel-open');return;}
       const block=p.plan.find(b=>b.id===resource.id),done=p.completed.includes(resource.id);
       panel.style.setProperty('--accent',resource.color);kicker.textContent=materialSymbol(resource)+' · '+(block?`Step ${block.step} · ${block.minutes} min`:'Optional support');title.textContent=resource.title;
       const circle=root.querySelector(`.node[data-id="${resource.id}"] .halo`);circle?.setAttribute('stroke-opacity','.6');
@@ -313,7 +330,7 @@
       kicker.textContent='How to use the orbit';title.textContent='Click, practise, reflect';
       paragraph('Follow the numbered circles for today’s sequence. Solid outlines show planned activities; dashed outlines offer extra support.');
       paragraph('Click any material for its instructions and completion button. Click the centre for topic notes and a short concept check.');
-      paragraph('The overlapping zones connect understanding, practice and reflection. Zoom with + or −; Fit restores the view.','small');
+      paragraph(compactDiagram()?'The overlapping zones connect understanding, practice and reflection. Scroll to explore the circles. Use Back to learning orbit to return after reading a material.':'The overlapping zones connect understanding, practice and reflection. Zoom with + or −; Fit restores the view.','small');
       actions().appendChild(actionButton('See prerequisite connections',()=>jump('Topic connections')));
     }else{
       kicker.textContent=p.topic.area+(p.topic.session?' · Session '+p.topic.session:' · Foundations');title.textContent=p.topic.title;
@@ -324,11 +341,35 @@
       row.appendChild(actionButton('Check prerequisites'+(p.gaps.length?' ('+p.gaps.length+')':''),()=>openOrbitPanel('prerequisites')));
       row.appendChild(actionButton('Rate my skill / view progress',()=>jump('My progress')));
     }
-    if(animate&&motionAllowed())panel.classList.add('panel-enter');stageElement.appendChild(panel);paintOrbit();if(focus)title.focus({preventScroll:true});
+    const back=actionButton('Back to learning orbit',closeOrbitPanel);back.className='mobile-panel-back';body.appendChild(back);
+    if(animate&&motionAllowed())panel.classList.add('panel-enter');stageElement.appendChild(panel);paintOrbit();height();if(focus)requestAnimationFrame(()=>title.focus({preventScroll:!compactDiagram()}));
   }
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&orbitPanel){e.preventDefault();closeOrbitPanel();}});
+  function resourceLayout(ids,narrow){
+    const width=narrow?Math.max(240,window.innerWidth-2):1100;
+    const cx=width/2,positions={};let cy=337,vh=675;
+    const r=narrow?Math.min(64,(width-56)/4):82,topicRadius=narrow?Math.min(74,width*.235):108;
+    if(narrow){
+      const left=r+18,right=width-r-18,top=r+20;
+      let slots;
+      if(ids.length<=2){
+        cy=topicRadius+22;const bottom=cy+topicRadius+r+34;
+        slots=[[left,bottom],[right,bottom]];vh=bottom+r+24;
+      }else if(ids.length<=4){
+        const bottom=top+2*(r+topicRadius+30);cy=(top+bottom)/2;
+        slots=[[left,top],[right,top],[right,bottom],[left,bottom]];vh=bottom+r+24;
+      }else{
+        const upper=top+2*r+38;cy=upper+r+topicRadius+30;
+        const lower=cy+topicRadius+r+30,bottom=lower+2*r+38;
+        slots=[[left,top],[right,top],[right,upper],[right,lower],[right,bottom],[left,bottom],[left,lower],[left,upper]];vh=bottom+r+24;
+      }
+      ids.forEach((id,i)=>{const [x,y]=slots[i];positions[id]={x,y,r};});vh=Math.ceil(vh);
+    }else ids.forEach((id,i)=>{const angle=-Math.PI/2+i*2*Math.PI/ids.length;positions[id]={x:cx+410*Math.cos(angle),y:cy+235*Math.sin(angle),r};});
+    return {width,vh,cx,cy,positions,topicRadius,chartHeight:narrow?vh+2:Math.max(540,Math.min(690,window.innerWidth*.54))};
+  }
+
   function resourceMap(){
-    const narrow=window.innerWidth<620,p=args.payload,resources=p.resources,small=resources.length<4;
+    const narrow=compactDiagram(),p=args.payload,resources=p.resources;
     // Only explicit completion actions animate. Loading a browser backup,
     // importing progress or returning to this view never replays old checks.
     const notice=p.completion_notice,parts=typeof notice?.key==='string'?notice.key.split('|'):[];
@@ -336,9 +377,11 @@
     justCompleted=new Set(fresh?[parts[1]]:[]);lastCompletionNotice=notice?.event_id||null;completionSeen=true;hotResource=null;
     if(panelTopic!==p.topic.id){panelTopic=p.topic.id;orbitPanel=null;nativeResource=p.selected_resource;transform={x:0,y:0,k:1};}
     else if(nativeResource!==p.selected_resource){nativeResource=p.selected_resource;orbitPanel={kind:'resource',id:p.selected_resource};}
-    const width=narrow?440:1100,vh=narrow?(small?510:910):675;
-    const chartHeight=narrow?Math.round(window.innerWidth*(small?1.2:1.95)):Math.max(540,Math.min(690,window.innerWidth*.54));
-    const g=canvas(width,chartHeight,vh,'Your learning orbit — click a material or the centre for details');
+    let ids=[...new Set([...p.plan.map(b=>b.id),...resources.map(a=>a.id)])];
+    const {width,vh,chartHeight,cx,cy,positions,topicRadius}=resourceLayout(ids,narrow);
+    const context=p.topic.id+'|'+(narrow?'mobile-'+width:'desktop');
+    if(context!==orbitLayoutContext){orbitLayoutContext=context;transform={x:0,y:0,k:1};}
+    const g=canvas(width,chartHeight,vh,'Your learning orbit — tap a material or the centre for details');
     stageElement.classList.add('orbit-stage');
     const toolbar=root.querySelector('.toolbar');toolbar.classList.add('orbit-tools');toolbar.querySelector('.hint')?.remove();
     const next=p.next,chip=actionButton(next?`Next · ${next.title} · ${next.minutes} min`:'✓ Pathway complete',()=>next&&next.topic_id!==p.topic.id?openOrbitPanel('prerequisites'):next?openOrbitPanel('resource',next.id):openOrbitPanel('topic'));
@@ -347,71 +390,78 @@
     const key=actionButton('',()=>openOrbitPanel('materials'));key.className='key-button';key.setAttribute('aria-label','Material key');
     key.append(html('span','desktop-key','Material key'),html('span','mobile-key','Key'));toolbar.appendChild(key);
     const help=actionButton('?',()=>openOrbitPanel('guide'));help.setAttribute('aria-label','How to use the orbit');toolbar.appendChild(help);
-    const cx=width/2,cy=narrow?(small?285:440):337;
-    const zones=narrow?[[170,cy-65,150,'#146F78'],[270,cy+10,150,'#397DB5'],[220,cy+95,120,'#37856A']]:[[cx-130,cy-35,238,'#146F78'],[cx+130,cy-35,238,'#397DB5'],[cx,cy+110,186,'#37856A']];
+    const zones=narrow?[[cx-40,cy-45,Math.min(width*.45,170),'#146F78'],[cx+40,cy+15,Math.min(width*.45,170),'#397DB5'],[cx,cy+75,Math.min(width*.36,140),'#37856A']]:[[cx-130,cy-35,238,'#146F78'],[cx+130,cy-35,238,'#397DB5'],[cx,cy+110,186,'#37856A']];
     zones.forEach(([x,y,r,c])=>g.appendChild(el('circle',{cx:x,cy:y,r,fill:c,'fill-opacity':.035,stroke:c,'stroke-opacity':.12,'stroke-width':1.5})));
-    let ids=p.plan.map(b=>b.id);ids=[...new Set([...ids,...resources.map(a=>a.id)])];
-    const mobilePositions=[[110,95],[330,95],[330,270],[330,625],[330,810],[110,810],[110,625],[110,270]],positions={};
-    ids.forEach((id,i)=>{const angle=-Math.PI/2+i*2*Math.PI/ids.length;const [x,y]=narrow?mobilePositions[i]:[cx+410*Math.cos(angle),cy+235*Math.sin(angle)];positions[id]={x,y,r:narrow?65:82};});
     for(let i=1;i<p.plan.length;i++){const line=edge(g,positions[p.plan[i-1].id],positions[p.plan[i].id],{color:'#608e9b',width:2.5,curve:narrow?0:22});line.dataset.from=p.plan[i-1].id;line.dataset.to=p.plan[i].id;line.dataset.kind='practice';}
-    resources.filter(a=>!p.plan.some(b=>b.id===a.id)).forEach(a=>{const line=edge(g,positions[a.id],{x:cx,y:cy,r:narrow?79:108},{dashed:true,opacity:.35,width:1});line.dataset.from=a.id;line.dataset.to='_topic';line.dataset.kind='support';});
+    resources.filter(a=>!p.plan.some(b=>b.id===a.id)).forEach(a=>{const line=edge(g,positions[a.id],{x:cx,y:cy,r:topicRadius},{dashed:true,opacity:.35,width:1});line.dataset.from=a.id;line.dataset.to='_topic';line.dataset.kind='support';});
     const centre=el('g',{class:'node topic-centre','data-id':'_topic'});
-    const centreFace=glassNode(centre,cx,cy,narrow?79:108,'#cddfe9');
-    label(centreFace,p.topic.short_title,cx,cy-14,{max:17,size:narrow?17:22,weight:750,lineHeight:narrow?20:26});
-    label(centreFace,'Topic & concept check',cx,cy+(narrow?41:50),{size:narrow?9:12,fill:'#61758a',weight:500,max:30});
+    const centreFace=glassNode(centre,cx,cy,topicRadius,'#cddfe9');
+    label(centreFace,p.topic.short_title,cx,cy-14,{max:narrow?13:17,size:narrow?16:22,weight:750,lineHeight:narrow?20:26});
+    label(centreFace,'Topic & concept check',cx,cy+(narrow?41:50),{size:narrow?10:12,fill:'#61758a',weight:500,max:30});
     eventNode(centre,'topic_info',p.topic.id,'About '+p.topic.title+'. Open topic details and concept check.',()=>openOrbitPanel('topic'));bindOrbit(centre,'_topic');g.appendChild(centre);
     ids.forEach(id=>{
       const a=resources.find(r=>r.id===id),pos=positions[id],block=p.plan.find(b=>b.id===id),done=p.completed.includes(id);
       const node=el('g',{class:'node','data-id':id});
       const face=glassNode(node,pos.x,pos.y,pos.r,a.color,{width:block?2.8:1.5,dashed:!block});
       face.appendChild(el('circle',{cx:pos.x,cy:pos.y,r:pos.r-2,fill:a.color,'fill-opacity':block?.065:.02}));
-      label(face,a.short_title,pos.x,pos.y-10,{size:narrow?16:21,max:12,fill:'#20364d',weight:block?750:550,lineHeight:narrow?18:25});
-      label(face,done?'✓ Completed':block?block.minutes+' min':'Support',pos.x,pos.y+(narrow?33:42),{size:narrow?12:14,max:25,fill:done?'#287352':a.color,weight:650});
+      label(face,a.short_title,pos.x,pos.y-10,{size:narrow?14.5:21,max:12,fill:'#20364d',weight:block?750:550,lineHeight:narrow?18:25});
+      label(face,done?'✓ Completed':block?block.minutes+' min':'Support',pos.x,pos.y+(narrow?33:42),{size:narrow?11.5:14,max:25,fill:done?'#287352':a.color,weight:650});
       if(block){face.appendChild(el('circle',{cx:pos.x+pos.r*.72,cy:pos.y-pos.r*.72,r:narrow?14:16,fill:a.color,stroke:'white','stroke-width':2}));label(face,String(block.step),pos.x+pos.r*.72,pos.y-pos.r*.72+5,{size:narrow?11:13,fill:'white',max:3});}
       eventNode(node,'resource',id,materialSymbol(a)+' — '+a.title+(block?`, step ${block.step}, ${block.minutes} minutes`:', optional support')+'. Open instructions.',()=>openOrbitPanel('resource',id));bindOrbit(node,id);g.appendChild(node);if(justCompleted.has(id))celebrateCompletion(face,pos,a.title);
     });
     renderOrbitPanel(Boolean(orbitPanel));paintOrbit();
   }
   function topicMap(){
-    const p=args.payload,nodes=p.nodes,all=p.scope==='all',layers=new Map();
+    const p=args.payload,nodes=p.nodes,all=p.scope==='all',narrow=compactDiagram(),layers=new Map();
+    if(!nodes.length){root.appendChild(html('p','empty','Choose a topic to see its connections.'));return;}
     if(all){
-      const memo={};const rank=id=>{if(id in memo)return memo[id];const n=nodes.find(n=>n.id===id);return memo[id]=Math.max(0,...p.edges.filter(e=>e.to===id&&!e.helpful).map(e=>rank(e.from)+1));};
+      const memo={};const rank=id=>{if(id in memo)return memo[id];return memo[id]=Math.max(0,...p.edges.filter(e=>e.to===id&&!e.helpful).map(e=>rank(e.from)+1));};
       nodes.forEach(n=>{n.rank=rank(n.id);});
     }
     nodes.forEach(n=>{const rank=all?n.rank:n.column;const list=layers.get(rank)||[];list.push(n);layers.set(rank,list);});
     const keys=[...layers.keys()].sort((a,b)=>a-b),maxRows=Math.max(1,...[...layers.values()].map(a=>a.length));
-    const columns=keys.map(k=>Math.ceil(layers.get(k).length/4));
-    const width=Math.max(780,columns.reduce((a,b)=>a+b,0)*145+65),vh=Math.max(450,Math.min(4,maxRows)*125+100);
-    const g=canvas(width,all?580:Math.min(600,Math.max(400,vh*.85)),vh,'Topic prerequisite connections');
-    const positions={};
-    let colOffset=0;const totalColumns=columns.reduce((a,b)=>a+b,0),columnGap=(width-170)/Math.max(totalColumns-1,1);
-    keys.forEach((rank,index)=>{
-      const list=layers.get(rank),x=85+colOffset*columnGap,cols=columns[index];
-      let caption=all?'Step '+(rank+1):rank===0?'YOUR FOCUS':rank>0?'BUILDS ON THIS':rank===-1?'DIRECT BUILDING BLOCKS':'EARLIER FOUNDATIONS';
-      label(g,caption,x+(cols-1)*columnGap/2,25,{size:10,fill:'#61758a',max:25,weight:700});
-      list.forEach((n,i)=>{const col=Math.floor(i/4),rows=Math.min(4,list.length-col*4);positions[n.id]={x:x+col*columnGap,y:75+(i%4+.5)*(vh-95)/rows,r:n.role==='focus'?58:47};});
-      colOffset+=cols;
-    });
-    const context=p.scope+'|'+(nodes.find(n=>n.role==='focus')||{}).id+'|'+nodes.length+'|'+(window.innerWidth<540);
+    const columns=keys.map(k=>Math.ceil(layers.get(k).length/4)),positions={},captions=[];
+    let width,vh,chartHeight;
+    const caption=rank=>all?'Step '+(rank+1):rank===0?'YOUR FOCUS':rank>0?'BUILDS ON THIS':rank===-1?'DIRECT BUILDING BLOCKS':'EARLIER FOUNDATIONS';
+    if(narrow){
+      width=Math.max(240,window.innerWidth-2);const radius=Math.min(61,(width-56)/4),step=2*radius+32;let cursor=16;
+      keys.forEach(rank=>{
+        const list=layers.get(rank);captions.push({text:caption(rank),x:width/2,y:cursor+12});cursor+=30;
+        for(let i=0;i<list.length;i+=2){
+          const row=list.slice(i,i+2),y=cursor+radius+6;
+          row.forEach((node,index)=>{positions[node.id]={x:row.length===1?width/2:index===0?radius+18:width-radius-18,y,r:radius};});cursor+=step;
+        }cursor+=18;
+      });vh=Math.ceil(cursor);chartHeight=vh+2;
+    }else{
+      width=Math.max(780,columns.reduce((a,b)=>a+b,0)*145+65);vh=Math.max(450,Math.min(4,maxRows)*125+100);chartHeight=all?580:Math.min(600,Math.max(400,vh*.85));
+      let colOffset=0;const totalColumns=columns.reduce((a,b)=>a+b,0),columnGap=(width-170)/Math.max(totalColumns-1,1);
+      keys.forEach((rank,index)=>{
+        const list=layers.get(rank),x=85+colOffset*columnGap,cols=columns[index];captions.push({text:caption(rank),x:x+(cols-1)*columnGap/2,y:25});
+        list.forEach((n,i)=>{const col=Math.floor(i/4),rows=Math.min(4,list.length-col*4);positions[n.id]={x:x+col*columnGap,y:75+(i%4+.5)*(vh-95)/rows,r:n.role==='focus'?58:47};});colOffset+=cols;
+      });
+    }
+    const context=p.scope+'|'+(nodes.find(n=>n.role==='focus')||{}).id+'|'+nodes.length+'|'+(narrow?'mobile-'+width:'desktop');
     if(context!==layoutContext){
       layoutContext=context;const focus=positions[(nodes.find(n=>n.role==='focus')||nodes[0]).id];
-      const k=all||window.innerWidth<540?Math.min(2.8,Math.max(1,width/window.innerWidth)):1;
-      transform=k>1?{k,x:width/2-focus.x*k,y:vh/2-focus.y*k}:{x:0,y:0,k:1};apply();
+      const k=!narrow&&all?Math.min(2.8,Math.max(1,width/window.innerWidth)):1;
+      transform=k>1?{k,x:width/2-focus.x*k,y:vh/2-focus.y*k}:{x:0,y:0,k:1};
     }
-    p.edges.forEach(e=>{if(positions[e.from]&&positions[e.to]){const line=edge(g,positions[e.from],positions[e.to],{dashed:e.helpful,opacity:e.helpful?.6:.8,width:e.helpful?1.5:2,curve:12});line.dataset.from=e.from;line.dataset.to=e.to;line.dataset.kind=e.helpful?'helpful':'required';}});
+    const g=canvas(width,chartHeight,vh,'Topic prerequisite connections');stageElement.classList.add('topic-stage');
+    p.edges.forEach(e=>{if(positions[e.from]&&positions[e.to]){const line=edge(g,positions[e.from],positions[e.to],{dashed:e.helpful,opacity:e.helpful?.6:.8,width:e.helpful?1.5:2,curve:narrow?0:12});line.dataset.from=e.from;line.dataset.to=e.to;line.dataset.kind=e.helpful?'helpful':'required';}});
+    captions.forEach(c=>label(g,c.text,c.x,c.y,{size:narrow?11:10,fill:'#61758a',max:30,weight:700}));
     const colors={Foundations:'#8B66AD',Statics:'#146F78',Dynamics:'#C16A31'};
     nodes.forEach(n=>{
       const pos=positions[n.id],color=colors[n.area],node=el('g',{class:'node','data-id':n.id});
       const face=glassNode(node,pos.x,pos.y,pos.r,color,{width:n.role==='focus'?3:2,dashed:n.level===0});
       face.appendChild(el('circle',{cx:pos.x,cy:pos.y,r:pos.r-2,fill:color,'fill-opacity':n.role==='focus'?.06:.015}));
-      label(face,n.short_title,pos.x,pos.y-6,{size:n.role==='focus'?13:11.5,max:15,lineHeight:15,weight:650});
+      label(face,n.short_title,pos.x,pos.y-8,{size:narrow?13:n.role==='focus'?13:11.5,max:narrow?12:15,lineHeight:narrow?16:15,weight:650});
       const symbol=['? Not checked','↻ Practise','◐ With help','✓ Independent'][n.level];
-      label(face,symbol,pos.x,pos.y+29,{size:8.5,fill:'#526a7c',max:24});
+      label(face,symbol,pos.x,pos.y+(narrow?35:29),{size:narrow?10:8.5,fill:'#526a7c',max:24});
       eventNode(node,'topic',n.id,n.title+'. '+symbol+'. '+n.area);bindTopic(node,n.id);g.appendChild(node);
     });
     paintTopic(nodes.find(n=>n.role==='focus')?.id||nodes[0].id);
     const legend=html('div','legend');for(const [text,color] of Object.entries(colors)){const span=html('span'),dot=html('i','dot');dot.style.background=color;span.append(dot,document.createTextNode(text));legend.appendChild(span);}root.appendChild(legend);
-    root.appendChild(html('p','note','Arrows point from earlier knowledge to the topic that uses it. Solid = required; dashed = helpful. A dashed circle means not checked. Use zoom or drag the background for a closer view.'));
+    root.appendChild(html('p','note','Arrows point from earlier knowledge to the topic that uses it. Solid = required; dashed = helpful. A dashed circle means not checked. '+(narrow?'Scroll to explore the chain. Tap a topic to make it your focus.':'Use zoom or drag the background for a closer view.')));
   }
   function weekMap(){
     const p=args.payload,catalog=materialCatalog(p),materialById=Object.fromEntries(catalog.map(m=>[m.id,m]));
